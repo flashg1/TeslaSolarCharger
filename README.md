@@ -48,10 +48,10 @@ Settings > Devices & Services > Helpers > Create Helper > Toggle
 1.	Telsa Model3 charge from grid and solar
 2.	Tesla Model3 stop charging
 
--	Config the Blueprint script, eg.
+-	Config the Blueprint script specifying helper booleans created above, eg.
 Settings > Automations & Scenes > Blueprints > Tesla solar charger script
 
--	Config the Blueprint automation specifying previously created script, eg.
+-	Config the Blueprint automation specifying above script, eg.
 Settings > Automations & Scenes > Blueprints > Tesla solar charger automation
 
 
