@@ -20,7 +20,7 @@ Home Assistant smart charger Blueprint to charge Tesla car using surplus solar e
 Installation
 ============
 
--	Set up "Grid Power Net" sensor in HA config, eg.
+-	Set up "Grid Power Net" sensor in Home Assistant (HA) config, eg.
 
 /config/configuration.yaml
 
