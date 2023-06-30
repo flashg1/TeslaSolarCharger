@@ -20,7 +20,7 @@
 blueprint:
 
   name: Tesla solar charger automation
-  description: Smart charger to charge Tesla car using excess solar electricity. Automation to trigger "Tesla solar charger script".
+  description: Smart charger to charge Tesla car using surplus solar electricity. Automation to trigger "Tesla solar charger script".
   domain: automation
 
 ###############################################################################
