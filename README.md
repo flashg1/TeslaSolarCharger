@@ -4,8 +4,7 @@ Home Assistant smart charger Blueprint to charge Tesla car using excess solar el
 ###############################################################################
 # Disclaimer:
 #
-# Even though this automation has been created with care, the author cannot be
-# responsible for any damages caused by this automation.  Use at your own risk.
+# Even though this automation has been created with care, the author cannot be responsible for any damages caused by this automation.  Use at your own risk.
 #
 ###############################################################################
 # Note:
