@@ -1,5 +1,5 @@
 # TeslaSolarCharger
-Home Assistant smart charger to charge Tesla car using excess solar electricity.
+Home Assistant smart charger Blueprint to charge Tesla car using excess solar electricity.
 
 ###############################################################################
 # Disclaimer:
