@@ -1,6 +1,9 @@
 # TeslaSolarCharger
 Home Assistant smart charger Blueprint to charge Tesla car using excess solar electricity.
 
+![Screenshot_20230630-134732_Home Assistant](https://github.com/flashg1/TeslaSolarCharger/assets/122323972/fe86679c-5ca3-474c-80e9-d623a7e83c6e)
+
+
 ###############################################################################
 # Disclaimer:
 #
