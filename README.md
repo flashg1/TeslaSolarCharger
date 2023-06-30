@@ -26,7 +26,7 @@ Installation
 
 template:
 
-    # +ve => import from grid, -ve => export to grid
+    # For Enphase, grid_power_net is an integer in watts. Positive value means importing power from grid. Negative value means exporting power to grid.
     - sensor:
         name: Grid Power Net
         state_class: measurement
