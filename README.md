@@ -51,7 +51,7 @@ Settings > Devices & Services > Helpers > Create Helper > Toggle
 -	Config the Blueprint script, eg.
 Settings > Automations & Scenes > Blueprints > Tesla Solar Charger Script
 
--	Config the Blueprint automation specifying previously the script, eg.
+-	Config the Blueprint automation specifying previously created script, eg.
 Settings > Automations & Scenes > Blueprints > Tesla Solar Charger Automation
 
 
