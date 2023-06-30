@@ -49,10 +49,10 @@ Settings > Devices & Services > Helpers > Create Helper > Toggle
 2.	Tesla Model3 stop charging
 
 -	Config the Blueprint script, eg.
-Settings > Automations & Scenes > Blueprints > Tesla Solar Charger Script
+Settings > Automations & Scenes > Blueprints > Tesla solar charger script
 
 -	Config the Blueprint automation specifying previously created script, eg.
-Settings > Automations & Scenes > Blueprints > Tesla Solar Charger Automation
+Settings > Automations & Scenes > Blueprints > Tesla solar charger automation
 
 
 My setup
