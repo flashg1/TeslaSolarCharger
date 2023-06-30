@@ -1,0 +1,120 @@
+###############################################################################
+# Disclaimer:
+#
+# Even though this automation has been created with care, the author cannot be
+# responsible for any damages caused by this automation.  Use at your own risk.
+#
+###############################################################################
+# Objective:
+# - To charge Tesla from excess solar which would have otherwise be exported to grid.
+# - This is a Blueprint automation to trigger the Blueprint action script.
+#
+# Note:
+# - Credit goes to Alphaemef for the solar charger Blueprint.
+#   https://gist.github.com/Alphaemef/70f203cc6a5acb75d987ae88d9be2edf
+#
+# History:
+# 20/6/2023 Inspiration from Alphaemef's Tesla Solar Charger Blueprint 30/4/2023.
+###############################################################################
+
+blueprint:
+
+  name: Tesla solar charger automation
+  description: Smart charger to charge Tesla car using excess solar electricity. Automation to trigger "Tesla solar charger script".
+  domain: automation
+
+###############################################################################
+# Blueprint inputs
+###############################################################################
+  input:
+    car_location_tracker:
+      name: Tesla location tracker
+      description: The entity that provides the location of car. Important that home location is defined in Home Assistant.
+      default: device_tracker.location_tracker
+      selector:
+        entity:
+          domain: device_tracker
+
+    car_binary_sensor_charger_pluggedin:
+      name: Tesla binary sensor charger
+      description: Sensor to check if car is plugged in.
+      default: binary_sensor.charger
+      selector:
+        entity:
+          domain: binary_sensor
+
+    car_binary_sensor_charging:
+      name: Tesla binary sensor charging
+      description: Sensor to check if car is charging.
+      default: binary_sensor.charging
+      selector:
+        entity:
+          domain: binary_sensor
+
+    car_sensor_battery:
+      name: Tesla sensor battery
+      description: Sensor that reports current battery charge level.
+      default: sensor.battery
+      selector:
+        entity:
+          domain: sensor
+
+    sensor_grid_power_net:
+      name: Grid power net
+      description: Sensor that express negative power in Watts when exporting to grid and positive power when consuming from grid. This sensor is the feedback loop for adjusting power consumption.
+      default: sensor.grid_power_net
+      selector:
+        entity:
+          domain: sensor
+
+    car_solar_charger_script:
+      name: Tesla solar charger script
+      description: Choose the script to charge car from excess solar.
+      #default: script.tesla_model3_solar_charger_script
+      selector:
+        entity:
+          domain: script
+
+trigger:
+  - platform: numeric_state
+    entity_id: !input sensor_grid_power_net
+    below: 300
+  - platform: numeric_state
+    entity_id: !input sensor_grid_power_net
+    below: 0
+  - platform: state
+    entity_id:
+      - !input car_binary_sensor_charger_pluggedin
+    to: "on"
+
+condition:
+  #- condition: numeric_state
+  #  entity_id: !input sensor_grid_power_net
+  #  below: 500
+  - condition: numeric_state
+    entity_id: !input sensor_grid_power_net
+    below: 0
+  - condition: state
+    entity_id: !input car_binary_sensor_charging
+    state: "off"
+  - condition: numeric_state
+    entity_id: !input car_sensor_battery
+    below: 100
+  - condition: state
+    entity_id: !input car_location_tracker
+    state: home
+  - condition: state
+    entity_id: !input car_binary_sensor_charger_pluggedin
+    state: "on"
+  - condition: state
+    entity_id: !input car_solar_charger_script
+    state: "off"
+  - condition: sun
+    before: sunset
+    after: sunrise
+
+action:
+  - service: !input car_solar_charger_script
+    data: {}
+
+mode: single
