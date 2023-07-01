@@ -187,16 +187,16 @@ variables:
   # Constants
   #####################################
   # Tesla UMC charger initial minimum charging current is 5A, after that it can vary between 0A and 15A.
-  initial_charging_current: 6
+  initial_charge_current: 6
   #max_allowable_current_delta: 6
 
   # Time to wait in seconds for car to wake up.
   wait_car_wakeup: 40
 
   # Time to wait in seconds to turn charger on or off.
-  # To switch on charger from 2V to 230V and then ram up current, it took 16 seconds for initial_charging_current 15A.
+  # To switch on charger from 2V to 230V and then ram up current, it took 16 seconds for initial_charge_current 15A.
   #wait_charger_on: 16
-  # To switch on charger from 2V to 230V and then ram up current, it took 11 seconds for initial_charging_current 6A.
+  # To switch on charger from 2V to 230V and then ram up current, it took 11 seconds for initial_charge_current 6A.
   wait_charger_on: 11
   wait_charger_off: 5
 
@@ -418,23 +418,29 @@ action:
 
         - choose:
 
-            # First time run, set initial_charging_current and turn on charger.
+            # First time run, set initial_charge_current and turn on charger.
             - conditions:
                 - condition: template
                   value_template: "{{ repeat.index == 1 }}"
               sequence:
 
-                # Only set initial current if charging from solar, otherwise charge from grid using current set by user.
+                # Only set initial current if charging from solar, otherwise charge from grid using current set by user enforcing current limits.
                 - if:
                     - condition: template
                       value_template: "{{ is_state(charge_from_grid_and_solar, 'off') }}"
                   then:
                     - service: number.set_value
                       data:
-                        value: "{{ initial_charging_current }}"
+                        value: "{{ initial_charge_current }}"
                       target:
                         entity_id: !input car_number_charging_amps
-                    - delay: "{{ wait_command_execute }}"
+                  else:
+                    - service: number.set_value
+                      data:
+                        value: "{{ charge_current }}"
+                      target:
+                        entity_id: !input car_number_charging_amps
+                - delay: "{{ wait_command_execute }}"
 
                 # Turn on charger. Rate of current increase is handled by Tesla car.
                 - service: switch.turn_on
