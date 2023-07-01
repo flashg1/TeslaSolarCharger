@@ -1,0 +1,9 @@
+Tesla Solar Charger
+===================
+
+v0.2 1/07/2023
+-   Combined automation and script into one file.
+-   Not using grid_power_net for trigger.
+
+v0.1 20/6/2023
+-   Creation.

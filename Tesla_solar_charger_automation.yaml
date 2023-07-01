@@ -7,7 +7,6 @@
 ###############################################################################
 # Objective:
 # - To charge Tesla from excess solar which would have otherwise be exported to grid.
-# - This is a Blueprint automation to trigger the Blueprint action script.
 #
 # Note:
 # - Credit goes to Alphaemef for the solar charger Blueprint.
@@ -20,7 +19,7 @@
 blueprint:
 
   name: Tesla solar charger automation
-  description: Smart charger to charge Tesla car using surplus solar electricity. Automation to trigger "Tesla solar charger script".
+  description: Smart charger to charge Tesla car using surplus solar electricity.
   domain: automation
 
 ###############################################################################
@@ -35,6 +34,14 @@ blueprint:
         entity:
           domain: device_tracker
 
+    car_button_wake_up:
+      name: Tesla button wake up
+      description: Button to wake up car.
+      default: button.wake_up
+      selector:
+        entity:
+          domain: button
+
     car_binary_sensor_charger_pluggedin:
       name: Tesla binary sensor charger
       description: Sensor to check if car is plugged in.
@@ -42,6 +49,14 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
+
+    car_switch_charger:
+      name: Tesla switch charger
+      description: Switch to turn charger on or off.
+      default: switch.charger
+      selector:
+        entity:
+          domain: switch
 
     car_binary_sensor_charging:
       name: Tesla binary sensor charging
@@ -51,6 +66,22 @@ blueprint:
         entity:
           domain: binary_sensor
 
+    car_number_charging_amps:
+      name: Tesla charging amps
+      description: Entity to control current in Ampere used to charge the car battery. This is the main parameter used to adjust electricity consumption.
+      default: number.charging_amps
+      selector:
+        entity:
+          domain: number
+
+    car_number_charge_limit:
+      name: Tesla charge limit
+      description: Entity to control car battery charge limit in percentage (100% = fully charged).
+      default: number.charge_limit
+      selector:
+        entity:
+          domain: number
+
     car_sensor_battery:
       name: Tesla sensor battery
       description: Sensor that reports current battery charge level.
@@ -58,6 +89,14 @@ blueprint:
       selector:
         entity:
           domain: sensor
+
+    car_button_forceupdate_ha:
+      name: Tesla button force update Home Assistant
+      description: Button to force update sensors in Home Assistant with values from car.
+      default: button.force_data_update
+      selector:
+        entity:
+          domain: button
 
     sensor_grid_power_net:
       name: Grid power net
@@ -67,54 +106,444 @@ blueprint:
         entity:
           domain: sensor
 
-    car_solar_charger_script:
-      name: Tesla solar charger script
-      description: Choose the script to charge car from excess solar.
-      #default: script.tesla_model3_solar_charger_script
+    sensor_homebattery_power_net:
+      name: Home battery power net
+      description: Sensor reporting net battery power in Watts. This works even if no battery is connected, in which case choose any entity with a non-number state.
+      default: sensor.shift_state
       selector:
         entity:
-          domain: script
+          domain: sensor
 
+    sensor_homebattery_level:
+      name: Home battery charge level
+      description: Sensor reporting home battery charge level in percentage. If there is no homebattery_level entity, choose any entity with a non-number state.
+      default: sensor.shift_state
+      selector:
+        entity:
+          domain: sensor
+
+    # https://github.com/home-assistant/frontend/issues/12281
+    #toggle_charge_from_grid_and_solar:
+    #  name: Charge from Grid and Solar Toggle
+    #  description: Turn on to charge from grid and solar at constant current.
+    #  default: false
+    #  selector:
+    #    boolean: {}
+
+    toggle_charge_from_grid_and_solar:
+      name: Charge from grid and solar toggle
+      description: Toggle on to charge from grid and solar at specified current (Settings > Devices & Services > Helpers > Create helper > Toggle). The default is to charge from solar only.
+      #default: input_boolean.telsa_model3_charge_from_grid_and_solar
+      selector:
+        entity:
+          domain: input_boolean
+
+    toggle_stop_charger:
+      name: Stop charger toggle
+      description: Toggle on to stop charger script (Settings > Devices & Services > Helpers > Create helper > Toggle). Delayed by "Wait grid power net update" value.
+      #default: input_boolean.tesla_model3_stop_charging
+      selector:
+        entity:
+          domain: input_boolean
+
+    #stop_charger_button:
+    #  name: Stop Charger Button
+    #  description: Create helper button to stop this script when pressed (Settings > Devices & Services > Helpers > Create helper > Button).
+    #  selector:
+    #    entity:
+    #      domain: input_button
+
+    charger_voltage:
+      name: Charger voltage
+      description: Specify charger voltage in Volt. In Australia, single phase is 230V, and three phase is 400V due to 120 degree phase angle between phases.
+      default: 230
+
+    charger_max_current:
+      name: Charger maximum current
+      description: Specify charger maximum current in Ampere.
+      default: 15
+
+    wait_grid_power_net_update:
+      name: Wait grid power net update
+      description: Specify in seconds how often to check the "sensor_grid_power_net". The waiting period should be longer than the sensor update interval.
+      default: 60
+
+    timer_stop_script_after_time:
+      name: Absolute script end time
+      description: Specify time to stop charging at or after time. Set to "22:59:00" without quotes to use relative time.
+      default: "22:59:00"
+
+    timer_stop_script_relative_to_sunset:
+      name: Relative script end time
+      description: Specify relative time to stop charging relative to sunset, eg. set "-01:00:00" without quotes to end 1 hour before sunset.
+      default: "-01:00:00"
+
+###############################################################################
+# Global variables
+###############################################################################
+variables:
+
+  #####################################
+  # Constants
+  #####################################
+  # Tesla UMC charger initial minimum charging current is 5A, after that it can vary between 0A and 15A.
+  initial_charging_current: 6
+  #max_allowable_current_delta: 6
+
+  # Time to wait in seconds for car to wake up.
+  wait_car_wakeup: 40
+
+  # Time to wait in seconds to turn charger on or off.
+  # To switch on charger from 2V to 230V and then ram up current, it took 16 seconds for initial_charging_current 15A.
+  #wait_charger_on: 16
+  # To switch on charger from 2V to 230V and then ram up current, it took 11 seconds for initial_charging_current 6A.
+  wait_charger_on: 11
+  wait_charger_off: 5
+
+  # Time to wait in seconds for current to change after sending command.
+  #wait_current_change: "00:00:0.3"
+  wait_current_change: 0.3
+
+  # Time to wait in seconds for command to execute after sending command.
+  wait_command_execute: 5
+  #wait_command_execute_str: "00:00:{{ wait_command_execute }}"
+
+  # "Skew_default" defines the right / left skew of the import/export curve. I.e a skew of 0.0 will increase current draw
+  # as soon as power to grid turns negative, and reduces current when power goes higher than 230W.
+  # i.e it will aim at power draw in the range [0-230W[. A skew of -1 will aim at a power from grid of [-230;0[
+  # Should be kept between -1 and 0.
+  skew_default: -0.3
+
+  #####################################
+  # Inputs
+  #####################################
+  charge_from_grid_and_solar: !input toggle_charge_from_grid_and_solar
+  #stop_charger_button_press: !input stop_charger_button
+  stop_charger: !input toggle_stop_charger
+  car_charger_voltage: !input charger_voltage
+  car_charger_max_current: !input charger_max_current
+
+  # Power = Voltage * Current
+  # The power step in watts to increase or decrease with 1A current change.
+  one_amp_watt_step: "{{ car_charger_voltage * 1 }}"
+
+  # This worked ok.
+  #tesla_model3_charge_level: "sensor.battery"
+  #tesla_model3_charge_level: !input car_sensor_battery
+  car_chargelimit_ent: !input car_number_charge_limit
+  car_chargelimit_last: '{{ expand(car_chargelimit_ent)[0].last_changed | as_timestamp }}'
+  car_chargelimit_val: '{{ expand(car_chargelimit_ent)[0].state }}'
+  car_batterylevel_ent: !input car_sensor_battery
+  car_batterylevel_last: '{{ expand(car_batterylevel_ent)[0].last_changed | as_timestamp }}'
+  car_batterylevel_val: '{{ expand(car_batterylevel_ent)[0].state }}'
+
+  car_charging_amps: !input car_number_charging_amps
+
+###############################################################################
+# Trigger
+###############################################################################
 trigger:
-  - platform: numeric_state
-    entity_id: !input sensor_grid_power_net
-    below: 300
-  - platform: numeric_state
-    entity_id: !input sensor_grid_power_net
-    below: 0
+  #- platform: numeric_state
+  #  entity_id: !input sensor_grid_power_net
+  #  below: 300
+
+  #- platform: numeric_state
+  #  entity_id: !input sensor_grid_power_net
+  #  below: 0
+
+  # These Tesla triggers do not update often due to infrequent polling.
   - platform: state
     entity_id:
       - !input car_binary_sensor_charger_pluggedin
     to: "on"
 
 condition:
-  #- condition: numeric_state
-  #  entity_id: !input sensor_grid_power_net
-  #  below: 500
-  - condition: numeric_state
-    entity_id: !input sensor_grid_power_net
-    below: 0
-  - condition: state
-    entity_id: !input car_binary_sensor_charging
-    state: "off"
-  - condition: numeric_state
-    entity_id: !input car_sensor_battery
-    below: 100
+
   - condition: state
     entity_id: !input car_location_tracker
     state: home
-  - condition: state
-    entity_id: !input car_binary_sensor_charger_pluggedin
-    state: "on"
-  - condition: state
-    entity_id: !input car_solar_charger_script
-    state: "off"
-  - condition: sun
-    before: sunset
-    after: sunrise
 
+  - condition: state
+    entity_id: !input car_binary_sensor_charging
+    state: "off"
+
+###############################################################################
+# Action
+###############################################################################
 action:
-  - service: !input car_solar_charger_script
+
+  # Wake up Tesla.
+  - service: button.press
     data: {}
+    target:
+      entity_id: !input car_button_wake_up
+  - delay: "{{ wait_car_wakeup }}"
+
+  # Get the latest data from Tesla to update HA.
+  - service: button.press
+    data: {}
+    target:
+      entity_id: !input car_button_forceupdate_ha
+  - delay: "{{ wait_command_execute }}"
+
+  # Save current Tesla parameters for later restore.
+  - service: scene.create
+    data:
+      scene_id: tesla_solar_charger_script_scene
+      snapshot_entities:
+        - !input car_number_charge_limit
+        - !input car_number_charging_amps
+  - delay: "{{ wait_command_execute }}"
+
+  # Should not set own charge limit here. Should honour existing charge limit set by app or car.
+  #- service: number.set_value
+  #  data:
+  #    value: "{{ states('input_number.tesla_model3_max_charge_limit') | int }}"
+  #  target:
+  #    entity_id: !input car_number_charge_limit
+
+  #####################################
+  # Main while loop
+  #####################################
+  - repeat:
+
+      # Only start charging when following conditions are met, otherwise do not charge car.
+      while:
+        - condition: and
+          conditions:
+
+            # Check if stop button is recently pressed.
+            # https://community.home-assistant.io/t/repeat-until-input-button-is-pressed/429300
+            # input_button is a state with timestamp of button-press event.
+            # https://community.home-assistant.io/t/strptime-vs-as-datetime/381500/6
+            # Got follow error if button was newly created and was never pressed before. Work-around is just to press button once or set default(0, true).
+            # Error: In 'template' condition: TypeError: unsupported operand type(s) for -: 'datetime.datetime' and 'NoneType'
+            #- condition: template
+            #  value_template: "{{ now() - (states(stop_charger_button_press) | default(0, true) | as_datetime) > timedelta(seconds=(wait_command_execute * 3 + loop_wait_time)) }}"
+            - condition: template
+              value_template: "{{ is_state(stop_charger, 'off') }}"
+
+            # Check if charger is plugged in.
+            - condition: state
+              entity_id: !input car_binary_sensor_charger_pluggedin
+              state: "on"
+
+            # Stop charging when battery is 1% below charge limit.
+            # https://community.home-assistant.io/t/configuring-variables-into-templates-in-a-blueprint/323811/2
+            # OK to charge 1% less because Tesla can stop charging at 1% less by itself.
+            - condition: template
+              value_template: "{{ (expand(car_batterylevel_ent)[0].state | int + 1) < (expand(car_chargelimit_ent)[0].state | int) }}"
+
+            - condition: or
+              conditions:
+
+                # Check if required to charge at constant current from grid and solar.
+                #- condition: state
+                #  entity_id: input_boolean.telsa_model3_charge_from_grid_and_solar
+                #  state: "on"
+                - condition: template
+                  value_template: "{{ is_state(charge_from_grid_and_solar, 'on') }}"
+
+                # Check if charging within time limits.
+                - condition: and
+                  conditions:
+                    - condition: time
+                      before: !input timer_stop_script_after_time
+                    - condition: sun
+                      after: sunrise
+                      before: sunset
+                      before_offset: !input timer_stop_script_relative_to_sunset
+
+      sequence:
+
+        - variables:
+            # For Enphase, grid_power_net is an integer in watts. Positive value means importing power from grid. Negative value means exporting power to grid.
+            grid_power_net: !input sensor_grid_power_net
+
+            homebattery_power_net: !input sensor_homebattery_power_net
+            homebattery_level: !input sensor_homebattery_level
+            skew: >-
+              {% if skew_default <= -1 %}
+                {{ skew_default }}
+              {% elif states(homebattery_level) | float(90) < 90 %}
+                {{ -1.01 }}  
+              {% else %}
+                {{ skew_default }} 
+              {% endif %}
+
+        - variables:
+            all_power_net: >-
+              {% if states(homebattery_power_net) | float(0) > 0 %}
+                {{ states(grid_power_net) | float(0) + states(homebattery_power_net) | float(0) + (1 + skew_default) * one_amp_watt_step }}  
+              {% else %}
+                {{ states(grid_power_net) | float(0) }} 
+              {% endif %}
+
+            # This can be greater than car_charger_max_current.
+            # +ve => importing amp from grid, -ve => exporting amp to grid
+            all_current_net: "{{ (all_power_net / one_amp_watt_step) | float }}"
+
+            # Charge current for this sequence run, including sanity check to ensure within limits.
+            charge_current: >-
+              {% if states(car_charging_amps) | int < 0 %}
+                {{ 0 }}
+              {% elif states(car_charging_amps) | int > car_charger_max_current %}
+                {{ car_charger_max_current }}
+              {% else %}
+                {{ states(car_charging_amps) | int }}
+              {% endif %}
+
+            # If importing from grid, will try to decrease charge current by same consumption or 0.
+            # If exporting to grid, will try to increase charge current by same production or max charger current.
+            #propose_charge_current: >-
+            new_charge_current: >-
+              {% if all_current_net > 0 %}
+                {{ [0, charge_current - all_current_net] | max | round(0) }}
+              {% else %}
+                {{ [car_charger_max_current, charge_current - all_current_net] | min | round(0) }}
+              {% endif %}
+
+            # No longer required since step size is now 1A, except when switching on charger when current increment is managed by Tesla car.            
+            # Will try to increase or decrease current using step size max_allowable_current_delta only or smaller.
+            #new_charge_current: >-
+            #  {% if (charge_current - propose_charge_current) | abs > max_allowable_current_delta %}
+            #    {% if charge_current > propose_charge_current %}
+            #      {{ charge_current - max_allowable_current_delta }}
+            #    {% else %}
+            #      {{ charge_current + max_allowable_current_delta }}
+            #    {% endif %}
+            #  {% else %}
+            #    {{ propose_charge_current }}              
+            #  {% endif %}
+
+        - choose:
+
+            # First time run, set initial_charging_current and turn on charger.
+            - conditions:
+                - condition: template
+                  value_template: "{{ repeat.index == 1 }}"
+              sequence:
+
+                # Only set initial current if charging from solar, otherwise charge from grid using current set by user.
+                - if:
+                    - condition: template
+                      value_template: "{{ is_state(charge_from_grid_and_solar, 'off') }}"
+                  then:
+                    - service: number.set_value
+                      data:
+                        value: "{{ initial_charging_current }}"
+                      target:
+                        entity_id: !input car_number_charging_amps
+                    - delay: "{{ wait_command_execute }}"
+
+                # Turn on charger. Rate of current increase is handled by Tesla car.
+                - service: switch.turn_on
+                  data: {}
+                  target:
+                    entity_id: !input car_switch_charger
+                - delay: "{{ wait_charger_on }}"
+            
+            # Toggled to charge from grid and solar at current specified in app.
+            - conditions:
+                - condition: template
+                  value_template: "{{ is_state(charge_from_grid_and_solar, 'on') }}"
+              sequence:
+                - delay: "00:00:00"
+
+            # all_power_net < -69W, ie. need to increase charger current.
+            - conditions:
+                - condition: template
+                  value_template: "{{ all_power_net < (0 + skew) * one_amp_watt_step }}"
+              sequence:
+                # Gradually increase current with 1A step.
+                - repeat:
+                    while: "{{ (charge_current + repeat.index) <= new_charge_current }}"
+                    sequence:
+                      - service: number.set_value
+                        data_template:
+                          value: "{{ charge_current + repeat.index }}"
+                        target:
+                          entity_id: !input car_number_charging_amps
+                      - delay: "{{ wait_current_change }}"
+
+            # all_power_net >= 161W, ie. need to decrease charger current.
+            - conditions:
+                - condition: template
+                  value_template: "{{ all_power_net >= (1 + skew) * one_amp_watt_step }}"
+              sequence:
+                # Gradually decrease current with 1A step.
+                - repeat:
+                    while: "{{ (charge_current - repeat.index) >= new_charge_current }}"
+                    sequence:
+                      - service: number.set_value
+                        data_template:
+                          value: "{{ charge_current - repeat.index }}"
+                        target:
+                          entity_id: !input car_number_charging_amps
+                      - delay: "{{ wait_current_change }}"
+
+            # 161 > all_power_net >= -69W, ie. do nothing.
+            - conditions:
+                - condition: template
+                  value_template: "{{ (1 + skew) * one_amp_watt_step > all_power_net >= (0 + skew) * one_amp_watt_step }}"
+              sequence:
+                - delay: "00:00:00"
+
+
+        # Get the latest data from Tesla to update HA.
+        - service: button.press
+          data: {}
+          target:
+            entity_id: !input car_button_forceupdate_ha
+        - delay: "{{ wait_command_execute }}"
+
+        # Sleep to ensure HA is updated before the next read.
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: !input wait_grid_power_net_update
+            milliseconds: 0
+
+  #####################################
+  # Exit script
+  #####################################
+  - if:
+      - condition: state
+        entity_id: !input car_binary_sensor_charging
+        state: "on"
+    then:
+      # Gradually decrease to 0A with 1A step, otherwise Tesla car can decrease current from 15A -> 7A -> 0A in 1 second.
+      - variables:
+          charge_current: "{{ states(car_charging_amps) | int }}"
+      - repeat:
+          while: "{{ (charge_current - repeat.index) >= 0 }}"
+          sequence:
+            - service: number.set_value
+              data_template:
+                value: "{{ charge_current - repeat.index }}"
+              target:
+                entity_id: !input car_number_charging_amps
+            - delay: "{{ wait_current_change }}"
+      - delay: "{{ wait_command_execute }}"
+
+      # Turn off charger.
+      - service: switch.turn_off
+        data: {}
+        target:
+          entity_id: !input car_switch_charger
+      - delay: "{{ wait_charger_off }}"
+
+  # Restore previous settings.
+  - service: scene.turn_on
+    target:
+      entity_id: scene.tesla_solar_charger_script_scene
+  - delay: "{{ wait_command_execute }}"
+
+  # Get the latest data from Tesla to update HA before exiting script.
+  - service: button.press
+    data: {}
+    target:
+      entity_id: !input car_button_forceupdate_ha
+  - delay: "{{ wait_command_execute }}"
 
 mode: single

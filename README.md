@@ -1,10 +1,10 @@
-# TeslaSolarCharger
+# Tesla Solar Charger
 Home Assistant smart charger Blueprint to charge Tesla car using surplus solar electricity.
 
 ###############################################################################
 # Disclaimer:
 #
-# Even though this automation has been created with care, the author cannot be responsible for any damages caused by this automation.  Use at your own risk.
+# Even though this automation has been created with care, the author cannot be responsible for any damage caused by this automation.  Use at your own risk.
 #
 ###############################################################################
 # Note:
@@ -37,9 +37,8 @@ template:
             {{ states('sensor.envoy_current_power_consumption')|int - states('sensor.envoy_current_power_production')|int }}
 
 
--	Copy the 2 Blueprint files to,
+-	Copy the Blueprint file to,
 \\HOMEASSISTANT\config\blueprints\automation\flashg\Tesla_solar_charger_automation.yaml
-\\HOMEASSISTANT\config\blueprints\script\homeassistant\Tesla_solar_charger_script.yaml
 
 -	Restart HA.
 
@@ -48,10 +47,7 @@ Settings > Devices & Services > Helpers > Create Helper > Toggle
 1.	Telsa Model3 charge from grid and solar
 2.	Tesla Model3 stop charging
 
--	Config the Blueprint script specifying helper booleans created above, eg.
-Settings > Automations & Scenes > Blueprints > Tesla solar charger script
-
--	Config the Blueprint automation specifying above script, eg.
+-	Config the Blueprint automation specifying helper booleans created above, ie.
 Settings > Automations & Scenes > Blueprints > Tesla solar charger automation
 
 
@@ -74,10 +70,10 @@ How to use
 ==========
 
 -	Set your charging limit in app or car.
--	Connect charger to car. Normal charging at constant current should begin immediately if schedule charging is disabled.  Stop this normal charging by pressing "Stop Charging" button in Tesla app.  This will allow the script to take over and manage the charging current.
+-	Connect charger to car.  Normal charging at constant current should begin immediately if schedule charging is disabled.  Stop this normal charging by pressing "Stop Charging" button in Tesla app.  This will allow the script to take over and manage the charging current.  Please see work-arounds below if automation cannot be triggered.
 -	There are 2 options on how to charge the car (see below).
 -	The script will stop automatically 1% before the charging limit is reached.
--	To abort charging, turn on "Tesla Model3 stop charging".  Will take about a minute to terminate the charging script if using default values.
+-	To abort charging, turn on "Tesla Model3 stop charging".  The script will take about a minute to terminate if using default values.
 
 2 options on how to charge the car:
 
@@ -88,3 +84,15 @@ To charge from excess solar, just plug in the charger.  The initial charge curre
 Option 2
 --------
 To charge from grid, set your desired charging current and turn on "Telsa Model3 charge from grid and solar".
+
+
+Notes
+=====
+
+Automation cannot be triggered
+------------------------------
+The Tesla triggers and conditions don't usually work unless car is polled often.  Polling too often can drain the car battery.  So might have to wait a long time for the triggers to work.  Please see below for possible work-arounds.
+
+Work-arounds:
+1. Run the automation manually by selecting the automation and then select "Run Actions".
+2. Press the "Force data update" button before and after plugging in the charger.
