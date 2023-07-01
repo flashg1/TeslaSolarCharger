@@ -12,7 +12,7 @@ Home Assistant smart charger Blueprint to charge Tesla car using surplus solar e
 #   https://gist.github.com/Alphaemef/70f203cc6a5acb75d987ae88d9be2edf
 ###############################################################################
 
-![Screenshot_20230630-134732_Home Assistant](https://github.com/flashg1/TeslaSolarCharger/assets/122323972/fe86679c-5ca3-474c-80e9-d623a7e83c6e)
+![Screenshot_20230702-094232_Home Assistant](https://github.com/flashg1/TeslaSolarCharger/assets/122323972/58d1df89-905b-422c-8542-0081b9fa342f)
 
 ![Screenshot_20230630-135925_Home Assistant](https://github.com/flashg1/TeslaSolarCharger/assets/122323972/2f04b1e2-b56d-493c-977f-82d5dd04cbe5)
 
