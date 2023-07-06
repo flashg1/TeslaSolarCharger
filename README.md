@@ -72,7 +72,7 @@ How to use
 -	Set your charging limit in app or car.
 -	Connect charger to car.  Normal charging at constant current should begin immediately if schedule charging is disabled.  Stop this normal charging by pressing "Stop Charging" button in Tesla app.  This will allow the script to take over and manage the charging current.  Please see work-arounds below if automation cannot be triggered.
 -	There are 2 options on how to charge the car (see below).
--	The script will stop automatically 1% before the charging limit is reached.
+-	The script will stop if charger is turned off manually or automatically by car when reaching charge limit.
 -	To abort charging, turn on "Tesla Model3 stop charging".  The script will take about a minute to terminate if using default values.
 
 2 options on how to charge the car:

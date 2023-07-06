@@ -1,6 +1,9 @@
 Tesla Solar Charger
 ===================
 
+v0.4    6/7/2023
+-   Enhanced code to exit when reaching charge limit or if charger is turned off.
+
 v0.3    2/7/2023
 -   Enforce max and min current limits.
 

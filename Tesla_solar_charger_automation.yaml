@@ -180,6 +180,8 @@ blueprint:
 
 ###############################################################################
 # Global variables
+# https://community.home-assistant.io/t/why-the-heck-dont-we-have-global-variables/219671/86
+# https://github.com/rogro82/hass-variables
 ###############################################################################
 variables:
 
@@ -312,7 +314,7 @@ action:
         - condition: and
           conditions:
 
-            # Check if stop button is recently pressed.
+            # Exit while loop if stop button is recently pressed.
             # https://community.home-assistant.io/t/repeat-until-input-button-is-pressed/429300
             # input_button is a state with timestamp of button-press event.
             # https://community.home-assistant.io/t/strptime-vs-as-datetime/381500/6
@@ -320,19 +322,26 @@ action:
             # Error: In 'template' condition: TypeError: unsupported operand type(s) for -: 'datetime.datetime' and 'NoneType'
             #- condition: template
             #  value_template: "{{ now() - (states(stop_charger_button_press) | default(0, true) | as_datetime) > timedelta(seconds=(wait_command_execute * 3 + loop_wait_time)) }}"
+
+            # Exit while loop if stop button is toggled on.
             - condition: template
               value_template: "{{ is_state(stop_charger, 'off') }}"
 
-            # Check if charger is plugged in.
+            # Exit while loop if charger is not plugged in.
             - condition: state
               entity_id: !input car_binary_sensor_charger_pluggedin
               state: "on"
 
-            # Stop charging when battery is 1% below charge limit.
+            # Exit while loop when battery is 1% below charge limit.
             # https://community.home-assistant.io/t/configuring-variables-into-templates-in-a-blueprint/323811/2
             # OK to charge 1% less because Tesla can stop charging at 1% less by itself.
+            #- condition: template
+            #  value_template: "{{ (expand(car_batterylevel_ent)[0].state | int + 1) < (expand(car_chargelimit_ent)[0].state | int) }}"
+
+            # Exit while loop when battery is at charge limit.
+            # https://community.home-assistant.io/t/configuring-variables-into-templates-in-a-blueprint/323811/2
             - condition: template
-              value_template: "{{ (expand(car_batterylevel_ent)[0].state | int + 1) < (expand(car_chargelimit_ent)[0].state | int) }}"
+              value_template: "{{ (expand(car_batterylevel_ent)[0].state | int) < (expand(car_chargelimit_ent)[0].state | int) }}"
 
             - condition: or
               conditions:
@@ -455,6 +464,17 @@ action:
                   value_template: "{{ is_state(charge_from_grid_and_solar, 'on') }}"
               sequence:
                 - delay: "00:00:00"
+
+            # Exit script if charger is turned off, ie. not charging.
+            - conditions:
+                - condition: state
+                  entity_id: !input car_binary_sensor_charging
+                  state: "off"
+              sequence:
+                - stop: "Exiting script due to charger turned off manually or automatically by car when charge limit reached."
+                  # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
+                  # Cannot get response_variable to work. Needs to be key/value pair?
+                  #response_variable: "stop_charging_reason"
 
             # all_power_net < -69W, ie. need to increase charger current.
             - conditions:
