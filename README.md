@@ -54,6 +54,7 @@ Settings > Automations & Scenes > Blueprints > Tesla solar charger automation
 My setup
 ========
 
+-	Home Assistant, https://www.home-assistant.io/
 -	Enphase Envoy Integration, https://github.com/posixx/home_assistant_custom_envoy
 -	Tesla Custom Integration, https://github.com/alandtse/tesla
 -	Tesla UMC charger, max 15A.
