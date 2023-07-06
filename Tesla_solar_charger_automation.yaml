@@ -471,6 +471,19 @@ action:
                   entity_id: !input car_binary_sensor_charging
                   state: "off"
               sequence:
+                # Restore previous settings.
+                - service: scene.turn_on
+                  target:
+                    entity_id: scene.tesla_solar_charger_script_scene
+                - delay: "{{ wait_command_execute }}"
+
+                # Get the latest data from Tesla to update HA before exiting script.
+                - service: button.press
+                  data: {}
+                  target:
+                    entity_id: !input car_button_forceupdate_ha
+                - delay: "{{ wait_command_execute }}"
+
                 - stop: "Exiting script due to charger turned off manually or automatically by car when charge limit reached."
                   # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
                   # Cannot get response_variable to work. Needs to be key/value pair?
