@@ -55,7 +55,7 @@ My setup
 ========
 
 -	Home Assistant, https://www.home-assistant.io/
--	Enphase Envoy Integration, https://github.com/briancmpbll/home_assistant_custom_envoy
+-	Enphase Envoy Integration configured for 30 seconds update interval, https://github.com/briancmpbll/home_assistant_custom_envoy
 -	Tesla Custom Integration, https://github.com/alandtse/tesla
 -	Tesla UMC charger, 230V, max 15A.
 -	Tesla Model 3.
