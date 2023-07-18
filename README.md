@@ -9,7 +9,7 @@ Home Assistant smart charger Blueprint to charge Tesla car using surplus solar e
 ###############################################################################
 # Note:
 # - Credit goes to Alphaemef for the original solar charger Blueprint.
-#   https://gist.github.com/Alphaemef/70f203cc6a5acb75d987ae88d9be2edf
+#   https://github.com/Alphaemef/SolarBalance-Suite
 ###############################################################################
 
 ![Screenshot_20230702-094232_Home Assistant](https://github.com/flashg1/TeslaSolarCharger/assets/122323972/58d1df89-905b-422c-8542-0081b9fa342f)
@@ -55,7 +55,7 @@ My setup
 ========
 
 -	Home Assistant, https://www.home-assistant.io/
--	Enphase Envoy Integration, https://github.com/posixx/home_assistant_custom_envoy
+-	Enphase Envoy Integration, https://github.com/briancmpbll/home_assistant_custom_envoy
 -	Tesla Custom Integration, https://github.com/alandtse/tesla
 -	Tesla UMC charger, 230V, max 15A.
 -	Tesla Model 3.
