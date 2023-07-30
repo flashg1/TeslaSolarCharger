@@ -265,9 +265,9 @@ condition:
     entity_id: !input car_location_tracker
     state: home
 
-  - condition: state
-    entity_id: !input car_binary_sensor_charging
-    state: "off"
+  #- condition: state
+  #  entity_id: !input car_binary_sensor_charging
+  #  state: "off"
 
 ###############################################################################
 # Action
@@ -427,106 +427,112 @@ action:
 
         - choose:
 
-            # First time run, set initial_charge_current and turn on charger.
-            - conditions:
-                - condition: template
-                  value_template: "{{ repeat.index == 1 }}"
-              sequence:
+          # First time run, turn on charger if not turned on already.
+          - conditions:
+              - condition: template
+                value_template: "{{ repeat.index == 1 }}"
+            sequence:
 
-                # Only set initial current if charging from solar, otherwise charge from grid using current set by user enforcing current limits.
-                - if:
-                    - condition: template
-                      value_template: "{{ is_state(charge_from_grid_and_solar, 'off') }}"
-                  then:
+              - choose:
+                - conditions:
+                    - condition: state
+                      entity_id: !input car_binary_sensor_charging
+                      state: "off"
+                  sequence:
+                    # Only set initial current if charging from solar, otherwise charge from grid using current set by user enforcing current limits.
+                    - if:
+                        - condition: template
+                          value_template: "{{ is_state(charge_from_grid_and_solar, 'off') }}"
+                      then:
+                        - service: number.set_value
+                          data:
+                            value: "{{ initial_charge_current }}"
+                          target:
+                            entity_id: !input car_number_charging_amps
+                      else:
+                        - service: number.set_value
+                          data:
+                            value: "{{ charge_current }}"
+                          target:
+                            entity_id: !input car_number_charging_amps
+                    - delay: "{{ wait_command_execute }}"
+
+                    # Turn on charger. Rate of current increase is handled by Tesla car.
+                    - service: switch.turn_on
+                      data: {}
+                      target:
+                        entity_id: !input car_switch_charger
+                    - delay: "{{ wait_charger_on }}"
+          
+          # Toggled to charge from grid and solar at current specified in app.
+          - conditions:
+              - condition: template
+                value_template: "{{ is_state(charge_from_grid_and_solar, 'on') }}"
+            sequence:
+              - delay: "00:00:00"
+
+          # Exit script if charger is turned off, ie. not charging.
+          - conditions:
+              - condition: state
+                entity_id: !input car_binary_sensor_charging
+                state: "off"
+            sequence:
+              # Restore previous settings.
+              - service: scene.turn_on
+                target:
+                  entity_id: scene.tesla_solar_charger_script_scene
+              - delay: "{{ wait_command_execute }}"
+
+              # Get the latest data from Tesla to update HA before exiting script.
+              - service: button.press
+                data: {}
+                target:
+                  entity_id: !input car_button_forceupdate_ha
+              - delay: "{{ wait_command_execute }}"
+
+              - stop: "Exiting script due to charger turned off manually or automatically by car when charge limit reached."
+                # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
+                # Cannot get response_variable to work. Needs to be key/value pair?
+                #response_variable: "stop_charging_reason"
+
+          # all_power_net < -69W, ie. need to increase charger current.
+          - conditions:
+              - condition: template
+                value_template: "{{ all_power_net < (0 + skew) * one_amp_watt_step }}"
+            sequence:
+              # Gradually increase current with 1A step.
+              - repeat:
+                  while: "{{ (charge_current + repeat.index) <= new_charge_current }}"
+                  sequence:
                     - service: number.set_value
-                      data:
-                        value: "{{ initial_charge_current }}"
+                      data_template:
+                        value: "{{ charge_current + repeat.index }}"
                       target:
                         entity_id: !input car_number_charging_amps
-                  else:
+                    - delay: "{{ wait_current_change }}"
+
+          # all_power_net >= 161W, ie. need to decrease charger current.
+          - conditions:
+              - condition: template
+                value_template: "{{ all_power_net >= (1 + skew) * one_amp_watt_step }}"
+            sequence:
+              # Gradually decrease current with 1A step.
+              - repeat:
+                  while: "{{ (charge_current - repeat.index) >= new_charge_current }}"
+                  sequence:
                     - service: number.set_value
-                      data:
-                        value: "{{ charge_current }}"
+                      data_template:
+                        value: "{{ charge_current - repeat.index }}"
                       target:
                         entity_id: !input car_number_charging_amps
-                - delay: "{{ wait_command_execute }}"
+                    - delay: "{{ wait_current_change }}"
 
-                # Turn on charger. Rate of current increase is handled by Tesla car.
-                - service: switch.turn_on
-                  data: {}
-                  target:
-                    entity_id: !input car_switch_charger
-                - delay: "{{ wait_charger_on }}"
-            
-            # Toggled to charge from grid and solar at current specified in app.
-            - conditions:
-                - condition: template
-                  value_template: "{{ is_state(charge_from_grid_and_solar, 'on') }}"
-              sequence:
-                - delay: "00:00:00"
-
-            # Exit script if charger is turned off, ie. not charging.
-            - conditions:
-                - condition: state
-                  entity_id: !input car_binary_sensor_charging
-                  state: "off"
-              sequence:
-                # Restore previous settings.
-                - service: scene.turn_on
-                  target:
-                    entity_id: scene.tesla_solar_charger_script_scene
-                - delay: "{{ wait_command_execute }}"
-
-                # Get the latest data from Tesla to update HA before exiting script.
-                - service: button.press
-                  data: {}
-                  target:
-                    entity_id: !input car_button_forceupdate_ha
-                - delay: "{{ wait_command_execute }}"
-
-                - stop: "Exiting script due to charger turned off manually or automatically by car when charge limit reached."
-                  # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
-                  # Cannot get response_variable to work. Needs to be key/value pair?
-                  #response_variable: "stop_charging_reason"
-
-            # all_power_net < -69W, ie. need to increase charger current.
-            - conditions:
-                - condition: template
-                  value_template: "{{ all_power_net < (0 + skew) * one_amp_watt_step }}"
-              sequence:
-                # Gradually increase current with 1A step.
-                - repeat:
-                    while: "{{ (charge_current + repeat.index) <= new_charge_current }}"
-                    sequence:
-                      - service: number.set_value
-                        data_template:
-                          value: "{{ charge_current + repeat.index }}"
-                        target:
-                          entity_id: !input car_number_charging_amps
-                      - delay: "{{ wait_current_change }}"
-
-            # all_power_net >= 161W, ie. need to decrease charger current.
-            - conditions:
-                - condition: template
-                  value_template: "{{ all_power_net >= (1 + skew) * one_amp_watt_step }}"
-              sequence:
-                # Gradually decrease current with 1A step.
-                - repeat:
-                    while: "{{ (charge_current - repeat.index) >= new_charge_current }}"
-                    sequence:
-                      - service: number.set_value
-                        data_template:
-                          value: "{{ charge_current - repeat.index }}"
-                        target:
-                          entity_id: !input car_number_charging_amps
-                      - delay: "{{ wait_current_change }}"
-
-            # 161 > all_power_net >= -69W, ie. do nothing.
-            - conditions:
-                - condition: template
-                  value_template: "{{ (1 + skew) * one_amp_watt_step > all_power_net >= (0 + skew) * one_amp_watt_step }}"
-              sequence:
-                - delay: "00:00:00"
+          # 161 > all_power_net >= -69W, ie. do nothing.
+          - conditions:
+              - condition: template
+                value_template: "{{ (1 + skew) * one_amp_watt_step > all_power_net >= (0 + skew) * one_amp_watt_step }}"
+            sequence:
+              - delay: "00:00:00"
 
 
         # Get the latest data from Tesla to update HA.
