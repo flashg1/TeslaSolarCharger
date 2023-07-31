@@ -3,6 +3,7 @@ Tesla Solar Charger
 
 v0.5    30/7/2023
 -   Changed behaviour to always charge from excess solar when charger is connected, unless night time or toggled to charge from grid.
+-   Updated doc.
 
 v0.4    6/7/2023
 -   Enhanced code to exit when reaching charge limit or if charger is turned off.

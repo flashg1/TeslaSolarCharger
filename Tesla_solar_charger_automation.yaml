@@ -123,17 +123,17 @@ blueprint:
           domain: sensor
 
     # https://github.com/home-assistant/frontend/issues/12281
-    #toggle_charge_from_grid_and_solar:
-    #  name: Charge from Grid and Solar Toggle
-    #  description: Turn on to charge from grid and solar at constant current.
+    #toggle_charge_from_grid:
+    #  name: Charge from Grid Toggle
+    #  description: Turn on to charge from grid at constant current.
     #  default: false
     #  selector:
     #    boolean: {}
 
-    toggle_charge_from_grid_and_solar:
-      name: Charge from grid and solar toggle
-      description: Toggle on to charge from grid and solar at specified current (Settings > Devices & Services > Helpers > Create helper > Toggle). The default is to charge from solar only.
-      #default: input_boolean.telsa_model3_charge_from_grid_and_solar
+    toggle_charge_from_grid:
+      name: Charge from grid toggle
+      description: Toggle on to charge from grid at specified current (Settings > Devices & Services > Helpers > Create helper > Toggle). The default is to charge from solar only.
+      #default: input_boolean.telsa_model3_charge_from_grid
       selector:
         entity:
           domain: input_boolean
@@ -219,7 +219,7 @@ variables:
   #####################################
   # Inputs
   #####################################
-  charge_from_grid_and_solar: !input toggle_charge_from_grid_and_solar
+  charge_from_grid: !input toggle_charge_from_grid
   #stop_charger_button_press: !input stop_charger_button
   stop_charger: !input toggle_stop_charger
   car_charger_voltage: !input charger_voltage
@@ -346,12 +346,12 @@ action:
             - condition: or
               conditions:
 
-                # Check if required to charge at constant current from grid and solar.
+                # Check if required to charge at constant current from grid.
                 #- condition: state
-                #  entity_id: input_boolean.telsa_model3_charge_from_grid_and_solar
+                #  entity_id: input_boolean.telsa_model3_charge_from_grid
                 #  state: "on"
                 - condition: template
-                  value_template: "{{ is_state(charge_from_grid_and_solar, 'on') }}"
+                  value_template: "{{ is_state(charge_from_grid, 'on') }}"
 
                 # Check if charging within time limits.
                 - condition: and
@@ -442,7 +442,7 @@ action:
                     # Only set initial current if charging from solar, otherwise charge from grid using current set by user enforcing current limits.
                     - if:
                         - condition: template
-                          value_template: "{{ is_state(charge_from_grid_and_solar, 'off') }}"
+                          value_template: "{{ is_state(charge_from_grid, 'off') }}"
                       then:
                         - service: number.set_value
                           data:
@@ -464,10 +464,10 @@ action:
                         entity_id: !input car_switch_charger
                     - delay: "{{ wait_charger_on }}"
           
-          # Toggled to charge from grid and solar at current specified in app.
+          # Toggled to charge from grid at current specified in app.
           - conditions:
               - condition: template
-                value_template: "{{ is_state(charge_from_grid_and_solar, 'on') }}"
+                value_template: "{{ is_state(charge_from_grid, 'on') }}"
             sequence:
               - delay: "00:00:00"
 

@@ -44,7 +44,7 @@ template:
 
 -	Create 2 helper booleans, eg.
 Settings > Devices & Services > Helpers > Create Helper > Toggle
-1.	Telsa Model3 charge from grid and solar
+1.	Telsa Model3 charge from grid
 2.	Tesla Model3 stop charging
 
 -	Config the Blueprint automation specifying charger voltage, maximum current and helper booleans created above, ie.
@@ -71,7 +71,7 @@ How to use
 ==========
 
 -	Set your charging limit in app or car.
--	Connect charger to car.  Normal charging at constant current should begin immediately if schedule charging is disabled.  After a little while, the script will take over and manage the charging current while the sun is shining.  Please see work-arounds below if automation cannot be triggered.
+-	Connect charger to car.  Normal charging at constant current should begin immediately if schedule charging is disabled.  After a little while, the script will take over and manage the charging current during daylight hours.  Please see work-arounds below if automation cannot be triggered.
 -	There are 2 options on how to charge the car (see below).
 -	The script will stop if charger is turned off manually or automatically by car when reaching charge limit.
 -	To abort charging, turn on "Tesla Model3 stop charging".  The script will take about a minute to terminate if using default values.
@@ -84,7 +84,7 @@ To charge from excess solar, just plug in the charger.  The initial charge curre
 
 Option 2
 --------
-To charge from grid, set your desired charging current and turn on "Telsa Model3 charge from grid and solar".
+To charge from grid, set your desired charging current and turn on "Telsa Model3 charge from grid".
 
 
 Notes
