@@ -170,18 +170,13 @@ blueprint:
 
     sunrise_offset_start_trigger:
       name: Sunrise offset start trigger
-      description: Specify time to start charging relative to sunrise, eg. set "+01:00:00" without quotes to start 1 hour after sunrise.
-      default: "+01:00:00"
+      description: Specify time to start charging relative to sunrise, eg. set "+00:30:00" without quotes to start 30 minutes after sunrise.
+      default: "+00:30:00"
 
     sunset_offset_end_trigger:
       name: Sunset offset end trigger
       description: Specify time to stop charging relative to sunset, eg. set "-00:30:00" without quotes to end 30 minutes before sunset.
       default: "-00:30:00"
-
-    timer_stop_script_after_time:
-      name: Absolute script end time
-      description: Specify time to stop charging at or after time. Set to "22:59:00" without quotes to use relative time.
-      default: "22:59:00"
 
 ###############################################################################
 # Global variables
@@ -266,10 +261,11 @@ trigger:
       - !input car_binary_sensor_charger_pluggedin
     to: "on"
 
+  # Disabled this trigger to allow off-peak night time charging.
   # Trigger action if already charging.
-  - platform: state
-    entity_id: !input car_binary_sensor_charging
-    to: "on"
+  #- platform: state
+  #  entity_id: !input car_binary_sensor_charging
+  #  to: "on"
 
   # Trigger action after sunrise offset.
   - platform: sun
@@ -326,12 +322,12 @@ action:
   #####################################
   - repeat:
 
-      # Only start charging when following conditions are met, otherwise do not charge car.
+      # Only start charging when following conditions are met, otherwise exit script.
       while:
         - condition: and
           conditions:
 
-            # Exit while loop if stop button is recently pressed.
+            # Continue if stop button has not been recently pressed.
             # https://community.home-assistant.io/t/repeat-until-input-button-is-pressed/429300
             # input_button is a state with timestamp of button-press event.
             # https://community.home-assistant.io/t/strptime-vs-as-datetime/381500/6
@@ -340,22 +336,22 @@ action:
             #- condition: template
             #  value_template: "{{ now() - (states(stop_charger_button_press) | default(0, true) | as_datetime) > timedelta(seconds=(wait_command_execute * 3 + loop_wait_time)) }}"
 
-            # Exit while loop if stop button is toggled on.
+            # Continue if stop button is toggled off.
             - condition: template
               value_template: "{{ is_state(stop_charger, 'off') }}"
 
-            # Exit while loop if charger is not plugged in.
+            # Continue if charger is plugged in.
             - condition: state
               entity_id: !input car_binary_sensor_charger_pluggedin
               state: "on"
 
-            # Exit while loop when battery is 1% below charge limit.
+            # Continue if battery is more than 1% below charge limit.
             # https://community.home-assistant.io/t/configuring-variables-into-templates-in-a-blueprint/323811/2
             # OK to charge 1% less because Tesla can stop charging at 1% less by itself.
             #- condition: template
             #  value_template: "{{ (expand(car_batterylevel_ent)[0].state | int + 1) < (expand(car_chargelimit_ent)[0].state | int) }}"
 
-            # Exit while loop when battery is at charge limit.
+            # Continue if battery is below charge limit.
             # https://community.home-assistant.io/t/configuring-variables-into-templates-in-a-blueprint/323811/2
             - condition: template
               value_template: "{{ (expand(car_batterylevel_ent)[0].state | int) < (expand(car_chargelimit_ent)[0].state | int) }}"
@@ -363,22 +359,18 @@ action:
             - condition: or
               conditions:
 
-                # Check if required to charge at constant current from grid.
+                # Continue if charge from grid at constant current.
                 #- condition: state
                 #  entity_id: input_boolean.telsa_model3_charge_from_grid
                 #  state: "on"
                 - condition: template
                   value_template: "{{ is_state(charge_from_grid, 'on') }}"
 
-                # Check if charging within time limits.
-                - condition: and
-                  conditions:
-                    - condition: time
-                      before: !input timer_stop_script_after_time
-                    - condition: sun
-                      after: sunrise
-                      before: sunset
-                      before_offset: !input sunset_offset_end_trigger
+                # Continue if within daylight hours.
+                - condition: sun
+                  after: sunrise
+                  before: sunset
+                  before_offset: !input sunset_offset_end_trigger
 
       sequence:
 
