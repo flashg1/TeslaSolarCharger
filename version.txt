@@ -1,6 +1,10 @@
 Tesla Solar Charger
 ===================
 
+v0.6    16/8/2023
+-   Support multi-day charging using sunrise trigger.
+-   Turning on charger will also trigger script action so that charging is always managed by script.
+
 v0.5    30/7/2023
 -   Changed behaviour to always charge from excess solar when charger is connected, unless night time or toggled to charge from grid.
 -   Updated doc.

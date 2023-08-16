@@ -168,15 +168,20 @@ blueprint:
       description: Specify in seconds how often to check the "sensor_grid_power_net". The waiting period should be longer than the sensor update interval.
       default: 60
 
+    sunrise_offset_start_trigger:
+      name: Sunrise offset start trigger
+      description: Specify time to start charging relative to sunrise, eg. set "+01:00:00" without quotes to start 1 hour after sunrise.
+      default: "+01:00:00"
+
+    sunset_offset_end_trigger:
+      name: Sunset offset end trigger
+      description: Specify time to stop charging relative to sunset, eg. set "-00:30:00" without quotes to end 30 minutes before sunset.
+      default: "-00:30:00"
+
     timer_stop_script_after_time:
       name: Absolute script end time
       description: Specify time to stop charging at or after time. Set to "22:59:00" without quotes to use relative time.
       default: "22:59:00"
-
-    timer_stop_script_relative_to_sunset:
-      name: Relative script end time
-      description: Specify relative time to stop charging relative to sunset, eg. set "-01:00:00" without quotes to end 1 hour before sunset.
-      default: "-01:00:00"
 
 ###############################################################################
 # Global variables
@@ -242,7 +247,9 @@ variables:
   car_charging_amps: !input car_number_charging_amps
 
 ###############################################################################
-# Trigger
+# Triggers
+# Note:
+# - Tesla triggers do not update often due to infrequent polling.
 ###############################################################################
 trigger:
   #- platform: numeric_state
@@ -253,11 +260,21 @@ trigger:
   #  entity_id: !input sensor_grid_power_net
   #  below: 0
 
-  # These Tesla triggers do not update often due to infrequent polling.
+  # Trigger action if just plugged in.
   - platform: state
     entity_id:
       - !input car_binary_sensor_charger_pluggedin
     to: "on"
+
+  # Trigger action if already charging.
+  - platform: state
+    entity_id: !input car_binary_sensor_charging
+    to: "on"
+
+  # Trigger action after sunrise offset.
+  - platform: sun
+    event: sunrise
+    offset: !input sunrise_offset_start_trigger
 
 condition:
 
@@ -265,9 +282,9 @@ condition:
     entity_id: !input car_location_tracker
     state: home
 
-  #- condition: state
-  #  entity_id: !input car_binary_sensor_charging
-  #  state: "off"
+  - condition: state
+    entity_id: !input car_binary_sensor_charger_pluggedin
+    state: "on"
 
 ###############################################################################
 # Action
@@ -361,7 +378,7 @@ action:
                     - condition: sun
                       after: sunrise
                       before: sunset
-                      before_offset: !input timer_stop_script_relative_to_sunset
+                      before_offset: !input sunset_offset_end_trigger
 
       sequence:
 
@@ -381,6 +398,8 @@ action:
               {% endif %}
 
         - variables:
+
+            # Net power from all sources (default 0 set by float(0) if cannot convert to float).
             all_power_net: >-
               {% if states(homebattery_power_net) | float(0) > 0 %}
                 {{ states(grid_power_net) | float(0) + states(homebattery_power_net) | float(0) + (1 + skew_default) * one_amp_watt_step }}  
