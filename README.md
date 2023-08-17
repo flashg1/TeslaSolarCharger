@@ -61,10 +61,12 @@ My setup
 -	Tesla Model 3.
 
 
-Function
+Features
 ========
 
 -	Charge from excess solar adjusting Tesla car charging current according to feedback loop value "Grid Power Net".  The "Grid Power Net" sensor expresses negative power in Watts when exporting to grid, and positive power when consuming from grid.
+-   Support multi-day solar charging using sunrise trigger to start and sunset trigger to stop.
+-   Compatible with off-peak night time charging.
 
 
 How to use
