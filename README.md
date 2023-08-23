@@ -23,7 +23,7 @@ Installation
 -	Set up "Grid Power Net" sensor in Home Assistant (HA) config, eg.
 
 /config/configuration.yaml
-
+```
 template:
 
     # For Enphase, grid_power_net is an integer in watts. Positive value means importing power from grid. Negative value means exporting power to grid.
@@ -35,7 +35,7 @@ template:
         device_class: power
         state: >
             {{ states('sensor.envoy_current_power_consumption')|int - states('sensor.envoy_current_power_production')|int }}
-
+```
 
 -	Copy the Blueprint file to,
 \\HOMEASSISTANT\config\blueprints\automation\flashg\Tesla_solar_charger_automation.yaml
