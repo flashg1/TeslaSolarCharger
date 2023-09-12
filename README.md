@@ -34,7 +34,7 @@ template:
         unit_of_measurement: W
         device_class: power
         state: >
-            {{ states('sensor.envoy_current_power_consumption')|int - states('sensor.envoy_current_power_production')|int }}
+            {{ states('sensor.envoy_[YourEnvoyId]_current_power_consumption')|int - states('sensor.envoy_[YourEnvoyId]_current_power_production')|int }}
 ```
 
 -	Copy the Blueprint file to,
@@ -94,7 +94,7 @@ Notes
 
 Automation cannot be triggered
 ------------------------------
-The Tesla triggers and conditions don't usually work unless car is polled often.  Polling too often can drain the car battery.  So might have to wait a long time for the triggers to work.  Please see below for possible work-arounds.
+The Tesla triggers and conditions are slow to update unless car is polled often.  Polling too often can drain the car battery.  So might have to wait a minute or two for the conditions to refresh and the triggers to work.  Please see below for possible work-arounds.
 
 Work-arounds:
 1. Run the automation manually by selecting the automation and then select "Run Actions".
