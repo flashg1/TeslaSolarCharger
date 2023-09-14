@@ -1,6 +1,9 @@
 Tesla Solar Charger
 ===================
 
+v0.8    14/9/2023
+-   Enforced integer input type, otherwise will get "TypeError: '>' not supported between instances of 'int' and 'str'".
+
 v0.7    17/8/2023
 -   Set default sunrise trigger to 30 minutes after sunrise.
 -   Removed support for absolute stop time to facilitate off-peak night time charging.

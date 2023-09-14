@@ -157,16 +157,34 @@ blueprint:
       name: Charger voltage
       description: Specify charger voltage in Volt. In Australia, single phase is 230V, and three phase is 400V due to 120 degree phase angle between phases.
       default: 230
+      selector:
+        number:
+          min: 110
+          max: 600
+          unit_of_measurement: volt
+          mode: box
 
     charger_max_current:
       name: Charger maximum current
       description: Specify charger maximum current in Ampere.
       default: 15
+      selector:
+        number:
+          min: 5
+          max: 100
+          unit_of_measurement: amp
+          mode: box
 
     wait_grid_power_net_update:
       name: Wait grid power net update
       description: Specify in seconds how often to check the "sensor_grid_power_net". The waiting period should be longer than the sensor update interval.
       default: 60
+      selector:
+        number:
+          min: 1
+          max: 600
+          unit_of_measurement: second
+          mode: box
 
     sunrise_offset_start_trigger:
       name: Sunrise offset start trigger
