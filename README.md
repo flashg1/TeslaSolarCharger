@@ -99,3 +99,61 @@ The Tesla triggers and conditions are slow to update unless car is polled often.
 Work-arounds:
 1. Run the automation manually by selecting the automation and then select "Run Actions".
 2. Press the "Force data update" button before and after plugging in the charger.
+
+
+GUI display examples
+====================
+
+Dashboard Tesla power card
+--------------------------
+https://github.com/reptilex/tesla-style-solar-power-card
+
+```
+type: custom:tesla-style-solar-power-card
+name: Power Usage
+show_w_not_kw: 1
+
+# 3 flows between bubbles
+grid_to_house_entity: sensor.grid_power_import
+generation_to_grid_entity: sensor.grid_power_export
+generation_to_house_entity: sensor.solar_power_consumption
+
+# optional appliances with consumption and extra values
+appliance1_consumption_entity: sensor.charger_power
+appliance1_extra_entity: sensor.battery
+
+# optional 3 main bubble icons for clickable entities
+grid_entity: sensor.grid_power_net
+house_entity: sensor.envoy_[YourEnvoyId]_current_power_consumption
+generation_entity: sensor.solar_power_production
+
+```
+
+Dashboard Tesla solar charger control
+-------------------------------------
+```
+type: entities
+entities:
+  - entity: automation.[YourTeslaName]_solar_charger_automation
+  - type: attribute
+    entity: automation.[YourTeslaName]_solar_charger_automation
+    attribute: current
+    name: Running instance count
+  - type: attribute
+    entity: automation.[YourTeslaName]_solar_charger_automation
+    attribute: last_triggered
+    name: Last triggered
+  - entity: input_boolean.[YourTeslaName]_charge_from_grid
+  - entity: input_boolean.[YourTeslaName]_stop_charging
+  - entity: button.wake_up
+  - entity: button.force_data_update
+  - entity: device_tracker.location_tracker
+  - entity: binary_sensor.charger
+  - entity: binary_sensor.charging
+  - entity: number.charging_amps
+  - entity: sensor.range
+  - entity: sensor.battery
+  - entity: number.charge_limit
+  - entity: sensor.time_charge_complete
+  - entity: lock.charge_port_latch
+```
