@@ -1,6 +1,9 @@
 Tesla Solar Charger
 ===================
 
+v0.9    27/9/2023
+-   Specify the minimum charging current to keep charging the car when there is no excess solar electricity.
+
 v0.8    14/9/2023
 -   Enforced integer input type, otherwise will get "TypeError: '>' not supported between instances of 'int' and 'str'".
 

@@ -26,6 +26,125 @@ blueprint:
 # Blueprint inputs
 ###############################################################################
   input:
+
+    #####################################
+    # Main configs
+    #####################################
+    sensor_grid_power_net:
+      name: Grid power net
+      description: Sensor that express negative power in Watts when exporting to grid and positive power when consuming from grid. This sensor is the feedback loop for adjusting power consumption.
+      default: sensor.grid_power_net
+      selector:
+        entity:
+          domain: sensor
+
+    # https://github.com/home-assistant/frontend/issues/12281
+    #toggle_charge_from_grid:
+    #  name: Charge from Grid Toggle
+    #  description: Turn on to charge from grid at constant current.
+    #  default: false
+    #  selector:
+    #    boolean: {}
+
+    toggle_charge_from_grid:
+      name: Charge from grid toggle
+      description: Toggle on to charge from grid at specified current (Settings > Devices & Services > Helpers > Create helper > Toggle). The default is to charge from solar only.
+      #default: input_boolean.telsa_model3_charge_from_grid
+      selector:
+        entity:
+          domain: input_boolean
+
+    toggle_stop_charger:
+      name: Stop charger toggle
+      description: Toggle on to stop charger script (Settings > Devices & Services > Helpers > Create helper > Toggle). Delayed by "Wait grid power net update" value.
+      #default: input_boolean.tesla_model3_stop_charging
+      selector:
+        entity:
+          domain: input_boolean
+
+    #stop_charger_button:
+    #  name: Stop Charger Button
+    #  description: Create helper button to stop this script when pressed (Settings > Devices & Services > Helpers > Create helper > Button).
+    #  selector:
+    #    entity:
+    #      domain: input_button
+
+    charger_voltage:
+      name: Charger voltage
+      description: Specify charger voltage in Volt. In Australia, single phase is 230V, and three phase is 400V due to 120 degree phase angle between phases.
+      default: 230
+      selector:
+        number:
+          min: 110
+          max: 600
+          unit_of_measurement: volt
+          mode: box
+
+    charger_max_current:
+      name: Charger maximum current
+      description: Specify charger maximum current in Ampere.
+      default: 15
+      selector:
+        number:
+          min: 5
+          max: 100
+          unit_of_measurement: amp
+          mode: box
+
+    charger_min_current:
+      name: Charger minimum current
+      description: Specify the minimum charging current to keep charging the car when there is no excess solar electricity. The default is 0 Ampere.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: amp
+          mode: box
+
+    wait_grid_power_net_update:
+      name: Wait grid power net update
+      description: Specify in seconds how often to check the "sensor_grid_power_net". The waiting period should be longer than the sensor update interval.
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 600
+          unit_of_measurement: second
+          mode: box
+
+    sunrise_offset_start_trigger:
+      name: Sunrise offset start trigger
+      description: Specify time to start charging relative to sunrise, eg. set "+00:30:00" without quotes to start 30 minutes after sunrise.
+      default: "+00:30:00"
+
+    sunset_offset_end_trigger:
+      name: Sunset offset end trigger
+      description: Specify time to stop charging relative to sunset, eg. set "-00:30:00" without quotes to end 30 minutes before sunset.
+      default: "-00:30:00"
+
+    #####################################
+    # Home battery config (placeholder only)
+    #####################################
+    sensor_homebattery_power_net:
+      name: Home battery power net
+      description: Sensor reporting net battery power in Watts. This works even if no battery is connected, in which case choose any entity with a non-number state.
+      default: sensor.shift_state
+      selector:
+        entity:
+          domain: sensor
+
+    sensor_homebattery_level:
+      name: Home battery charge level
+      description: Sensor reporting home battery charge level in percentage. If there is no homebattery_level entity, choose any entity with a non-number state.
+      default: sensor.shift_state
+      selector:
+        entity:
+          domain: sensor
+
+    #####################################
+    # Tesla config entities
+    #####################################
     car_location_tracker:
       name: Tesla location tracker
       description: The entity that provides the location of car. Important that home location is defined in Home Assistant.
@@ -98,104 +217,6 @@ blueprint:
         entity:
           domain: button
 
-    sensor_grid_power_net:
-      name: Grid power net
-      description: Sensor that express negative power in Watts when exporting to grid and positive power when consuming from grid. This sensor is the feedback loop for adjusting power consumption.
-      default: sensor.grid_power_net
-      selector:
-        entity:
-          domain: sensor
-
-    sensor_homebattery_power_net:
-      name: Home battery power net
-      description: Sensor reporting net battery power in Watts. This works even if no battery is connected, in which case choose any entity with a non-number state.
-      default: sensor.shift_state
-      selector:
-        entity:
-          domain: sensor
-
-    sensor_homebattery_level:
-      name: Home battery charge level
-      description: Sensor reporting home battery charge level in percentage. If there is no homebattery_level entity, choose any entity with a non-number state.
-      default: sensor.shift_state
-      selector:
-        entity:
-          domain: sensor
-
-    # https://github.com/home-assistant/frontend/issues/12281
-    #toggle_charge_from_grid:
-    #  name: Charge from Grid Toggle
-    #  description: Turn on to charge from grid at constant current.
-    #  default: false
-    #  selector:
-    #    boolean: {}
-
-    toggle_charge_from_grid:
-      name: Charge from grid toggle
-      description: Toggle on to charge from grid at specified current (Settings > Devices & Services > Helpers > Create helper > Toggle). The default is to charge from solar only.
-      #default: input_boolean.telsa_model3_charge_from_grid
-      selector:
-        entity:
-          domain: input_boolean
-
-    toggle_stop_charger:
-      name: Stop charger toggle
-      description: Toggle on to stop charger script (Settings > Devices & Services > Helpers > Create helper > Toggle). Delayed by "Wait grid power net update" value.
-      #default: input_boolean.tesla_model3_stop_charging
-      selector:
-        entity:
-          domain: input_boolean
-
-    #stop_charger_button:
-    #  name: Stop Charger Button
-    #  description: Create helper button to stop this script when pressed (Settings > Devices & Services > Helpers > Create helper > Button).
-    #  selector:
-    #    entity:
-    #      domain: input_button
-
-    charger_voltage:
-      name: Charger voltage
-      description: Specify charger voltage in Volt. In Australia, single phase is 230V, and three phase is 400V due to 120 degree phase angle between phases.
-      default: 230
-      selector:
-        number:
-          min: 110
-          max: 600
-          unit_of_measurement: volt
-          mode: box
-
-    charger_max_current:
-      name: Charger maximum current
-      description: Specify charger maximum current in Ampere.
-      default: 15
-      selector:
-        number:
-          min: 5
-          max: 100
-          unit_of_measurement: amp
-          mode: box
-
-    wait_grid_power_net_update:
-      name: Wait grid power net update
-      description: Specify in seconds how often to check the "sensor_grid_power_net". The waiting period should be longer than the sensor update interval.
-      default: 60
-      selector:
-        number:
-          min: 1
-          max: 600
-          unit_of_measurement: second
-          mode: box
-
-    sunrise_offset_start_trigger:
-      name: Sunrise offset start trigger
-      description: Specify time to start charging relative to sunrise, eg. set "+00:30:00" without quotes to start 30 minutes after sunrise.
-      default: "+00:30:00"
-
-    sunset_offset_end_trigger:
-      name: Sunset offset end trigger
-      description: Specify time to stop charging relative to sunset, eg. set "-00:30:00" without quotes to end 30 minutes before sunset.
-      default: "-00:30:00"
-
 ###############################################################################
 # Global variables
 # https://community.home-assistant.io/t/why-the-heck-dont-we-have-global-variables/219671/86
@@ -242,6 +263,7 @@ variables:
   stop_charger: !input toggle_stop_charger
   car_charger_voltage: !input charger_voltage
   car_charger_max_current: !input charger_max_current
+  car_charger_min_current: !input charger_min_current
 
   # Power = Voltage * Current
   # The power step in watts to increase or decrease with 1A current change.
@@ -431,12 +453,12 @@ action:
                 {{ states(car_charging_amps) | int }}
               {% endif %}
 
-            # If importing from grid, will try to decrease charge current by same consumption or 0.
+            # If importing from grid, will try to decrease charge current by same consumption or min charger current.
             # If exporting to grid, will try to increase charge current by same production or max charger current.
             #propose_charge_current: >-
             new_charge_current: >-
               {% if all_current_net > 0 %}
-                {{ [0, charge_current - all_current_net] | max | round(0) }}
+                {{ [car_charger_min_current, charge_current - all_current_net] | max | round(0) }}
               {% else %}
                 {{ [car_charger_max_current, charge_current - all_current_net] | min | round(0) }}
               {% endif %}
