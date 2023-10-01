@@ -1,6 +1,9 @@
 Tesla Solar Charger
 ===================
 
+v1.0    2/10/2023
+-   For exit loop criteria, need to test charger switched off condition before charge from grid condition.
+
 v0.9    27/9/2023
 -   Specify the minimum charging current to keep charging the car when there is no excess solar electricity.
 

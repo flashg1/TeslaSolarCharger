@@ -515,13 +515,6 @@ action:
                         entity_id: !input car_switch_charger
                     - delay: "{{ wait_charger_on }}"
           
-          # Toggled to charge from grid at current specified in app.
-          - conditions:
-              - condition: template
-                value_template: "{{ is_state(charge_from_grid, 'on') }}"
-            sequence:
-              - delay: "00:00:00"
-
           # Exit script if charger is turned off, ie. not charging.
           - conditions:
               - condition: state
@@ -545,6 +538,13 @@ action:
                 # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
                 # Cannot get response_variable to work. Needs to be key/value pair?
                 #response_variable: "stop_charging_reason"
+
+          # Toggled to charge from grid at current specified in app.
+          - conditions:
+              - condition: template
+                value_template: "{{ is_state(charge_from_grid, 'on') }}"
+            sequence:
+              - delay: "00:00:00"
 
           # all_power_net < -69W, ie. need to increase charger current.
           - conditions:
