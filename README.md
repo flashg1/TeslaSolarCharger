@@ -98,7 +98,8 @@ The Tesla triggers and conditions are slow to update unless car is polled often.
 
 Work-arounds:
 1. Run the automation manually by selecting the automation and then select "Run Actions".
-2. Press the "Force data update" button before and after plugging in the charger.
+2. Turn polling off, then on.
+3. Press the "Force data update" button before and after plugging in the charger.
 
 
 GUI display examples
