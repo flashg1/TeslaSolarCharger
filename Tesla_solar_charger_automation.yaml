@@ -71,12 +71,12 @@ blueprint:
 
     charger_voltage:
       name: Charger voltage
-      description: Specify charger voltage in Volt. In Australia, single phase is 230V, and three phase is 400V due to 120 degree phase angle between phases.
+      description: Specify charger voltage in Volt. In Australia, single phase is 230V, and three phase is 400V due to 120 degree phase angle between phases. This can differ between countries.
       default: 230
       selector:
         number:
           min: 110
-          max: 600
+          max: 750
           unit_of_measurement: volt
           mode: box
 
