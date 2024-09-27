@@ -124,6 +124,80 @@ blueprint:
       default: "-00:30:00"
 
     #####################################
+    # Tesla daily charge limit
+    #####################################
+    car_charge_limit_monday:
+      name: Monday
+      description: Car charge limit for day (-1 = Use app charge limit).
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 100
+          unit_of_measurement: percent
+          mode: box
+    car_charge_limit_tuesday:
+      name: Tuesday
+      description: Car charge limit for day (-1 = Use app charge limit).
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 100
+          unit_of_measurement: percent
+          mode: box
+    car_charge_limit_wednesday:
+      name: Wednesday
+      description: Car charge limit for day (-1 = Use app charge limit).
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 100
+          unit_of_measurement: percent
+          mode: box
+    car_charge_limit_thursday:
+      name: Thursday
+      description: Car charge limit for day (-1 = Use app charge limit).
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 100
+          unit_of_measurement: percent
+          mode: box
+    car_charge_limit_friday:
+      name: Friday
+      description: Car charge limit for day (-1 = Use app charge limit).
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 100
+          unit_of_measurement: percent
+          mode: box
+    car_charge_limit_saturday:
+      name: Saturday
+      description: Car charge limit for day (-1 = Use app charge limit).
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 100
+          unit_of_measurement: percent
+          mode: box
+    car_charge_limit_sunday:
+      name: Sunday
+      description: Car charge limit for day (-1 = Use app charge limit).
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 100
+          unit_of_measurement: percent
+          mode: box
+
+    #####################################
     # Home battery config (placeholder only)
     #####################################
     sensor_homebattery_power_net:
@@ -201,10 +275,10 @@ blueprint:
         entity:
           domain: number
 
-    car_daily_charge_limit_csv:
-      name: Tesla daily charge limit
-      description: Percentage charge limit starting Monday to Sunday in CSV format, eg. 70,70,70,70,90,90,90 (min=0, max=100, ignore=-1).
-      default: "-1,-1,-1,-1,-1,-1,-1"
+    #car_charge_limit_csv:
+    #  name: Tesla daily charge limit
+    #  description: Percentage charge limit starting Monday to Sunday in CSV format, eg. 70,70,70,70,90,90,90 (min=0, max=100, ignore=-1).
+    #  default: "-1,-1,-1,-1,-1,-1,-1"
 
     car_sensor_battery:
       name: Tesla sensor battery
@@ -286,10 +360,18 @@ variables:
 
   car_charging_amps: !input car_number_charging_amps
 
-  car_daily_charge_limit_str: !input car_daily_charge_limit_csv
-  car_daily_charge_limit_array: "{{ car_daily_charge_limit_str.split(',') }}"
+  #car_charge_limit_str: !input car_charge_limit_csv
+  #car_charge_limit_array: "{{ car_charge_limit_str.split(',') }}"
 
-  #car_daily_charge_limit_str: '{{ car_daily_charge_limit_array | to_json }}'
+  # Store as integer array
+  mon: !input car_charge_limit_monday
+  tue: !input car_charge_limit_tuesday
+  wed: !input car_charge_limit_wednesday
+  thu: !input car_charge_limit_thursday
+  fri: !input car_charge_limit_friday
+  sat: !input car_charge_limit_saturday
+  sun: !input car_charge_limit_sunday
+  car_charge_limit_array: '{{ [mon, tue, wed, thu, fri, sat, sun] }}'
 
 ###############################################################################
 # Triggers
@@ -340,7 +422,7 @@ action:
   # Debug
   - service: system_log.write
     data_template:
-      message: "WL: {{ now().weekday() }}, {{ car_daily_charge_limit_array[now().weekday()] }}, {{ car_daily_charge_limit_array }}"
+      message: "WL: {{ now().weekday() }}, {{ car_charge_limit_array[now().weekday()] }}, {{ car_charge_limit_array }}"
       level: warning
 
   # Wake up Tesla.
@@ -366,31 +448,31 @@ action:
         - !input car_number_charging_amps
   - delay: "{{ wait_command_execute }}"
 
-  # Should honour existing charge limit set by app or car, unless car_daily_charge_limit_array for day is set.
+  # Should honour existing charge limit set by app or car, unless car_charge_limit_array for day is set.
   #- choose:
   #  - conditions:
   #      - condition: and
   #        conditions:
   #          - condition: template
-  #            value_template: "{{ car_daily_charge_limit_array[now().weekday()] | int >= 0 }}"
+  #            value_template: "{{ car_charge_limit_array[now().weekday()] | int >= 0 }}"
   #          - condition: template
-  #            value_template: "{{ car_daily_charge_limit_array[now().weekday()] | int <= 100 }}"
+  #            value_template: "{{ car_charge_limit_array[now().weekday()] | int <= 100 }}"
   #    sequence:
   #        - service: number.set_value
   #          data:
-  #            value: "{{ car_daily_charge_limit_array[now().weekday()] }}"
+  #            value: "{{ car_charge_limit_array[now().weekday()] }}"
   #          target:
   #            entity_id: !input car_number_charge_limit
   #        - delay: "{{ wait_command_execute }}"
 
-  # Should honour existing charge limit set by app or car, unless car_daily_charge_limit_array for day is set.
+  # Should honour existing charge limit set by app or car, unless car_charge_limit_array for day is set.
   - choose:
     - conditions: >
-        {{ car_daily_charge_limit_array[now().weekday()] | int >= 0 and car_daily_charge_limit_array[now().weekday()] | int <= 100 }}
+        {{ car_charge_limit_array[now().weekday()] >= 0 and car_charge_limit_array[now().weekday()] <= 100 }}
       sequence:
           - service: number.set_value
             data:
-              value: "{{ car_daily_charge_limit_array[now().weekday()] }}"
+              value: "{{ car_charge_limit_array[now().weekday()] }}"
             target:
               entity_id: !input car_number_charge_limit
           - delay: "{{ wait_command_execute }}"
