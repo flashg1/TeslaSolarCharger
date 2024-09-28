@@ -124,7 +124,7 @@ blueprint:
       default: "-00:30:00"
 
     #####################################
-    # Tesla daily charge limit
+    # Car daily charge limit
     #####################################
     car_charge_limit_monday:
       name: Monday
@@ -135,7 +135,7 @@ blueprint:
           min: -1
           max: 100
           unit_of_measurement: percent
-          mode: box
+          mode: slider
 
     car_charge_limit_tuesday:
       name: Tuesday
@@ -146,7 +146,7 @@ blueprint:
           min: -1
           max: 100
           unit_of_measurement: percent
-          mode: box
+          mode: slider
 
     car_charge_limit_wednesday:
       name: Wednesday
@@ -157,7 +157,7 @@ blueprint:
           min: -1
           max: 100
           unit_of_measurement: percent
-          mode: box
+          mode: slider
 
     car_charge_limit_thursday:
       name: Thursday
@@ -168,7 +168,7 @@ blueprint:
           min: -1
           max: 100
           unit_of_measurement: percent
-          mode: box
+          mode: slider
 
     car_charge_limit_friday:
       name: Friday
@@ -179,7 +179,7 @@ blueprint:
           min: -1
           max: 100
           unit_of_measurement: percent
-          mode: box
+          mode: slider
 
     car_charge_limit_saturday:
       name: Saturday
@@ -190,7 +190,7 @@ blueprint:
           min: -1
           max: 100
           unit_of_measurement: percent
-          mode: box
+          mode: slider
 
     car_charge_limit_sunday:
       name: Sunday
@@ -201,7 +201,7 @@ blueprint:
           min: -1
           max: 100
           unit_of_measurement: percent
-          mode: box
+          mode: slider
 
     #car_charge_limit_csv:
     #  name: Tesla daily charge limit
@@ -211,38 +211,35 @@ blueprint:
     #####################################
     # Weather forecast
     #####################################
+    charge_car_base_on_weather:
+      name: Adjust daily car charge limit based on weather
+      description: Automatically adjust to a higher charge limit if set within a rainy forecast period.  Requires 7 days charge limit settings above.
+      default: false
+      selector:
+        boolean:
+
     weather_provider:
-      name: "Weather provider"
-      description: "Select the weather provider to obtain the forecast"
+      name: Weather provider
+      description: Weather forecast provider
+      default: weather.forecast_home
       selector:
         entity:
           domain: weather
 
-    forecast_interval:
-      name: "Forecast interval"
-      description: 'Forecast interval, one of "hourly", "twice daily", or "daily". Not all intervals are available for all providers.'
-      default: "daily"
-      selector:
-        select:
-          options:
-            - "hourly"
-            - "twice_daily"
-            - "daily"
-
     forecast_index:
-      name: "Forecast index"
-      description: 'Select a specific forecast, the current time interval will be index "0". Increment this number for future forecasts based on the interval above. For example, a "daily" interval with index 2 will be the daily forecast 2 days from now'
+      name: Forecast index
+      description: Number of days to forecast weather excluding today
       default: 2
       selector:
         number:
           min: 0
           max: 6
           mode: slider
-          unit_of_measurement: index
+          unit_of_measurement: day
 
     forecast_attribute:
-      name: "Enter the desired forecast attribute"
-      description: 'Type in the name of the desired forecast attribute for your provider. "condition" is a common attribute for many providers.'
+      name: Weather condition field name
+      description: Field name for forecast attribute (default="condition").  See https://www.home-assistant.io/integrations/weather/
       default: "condition"
       selector:
         text:
@@ -405,10 +402,9 @@ variables:
 
   car_charging_amps: !input car_number_charging_amps
 
-  #car_charge_limit_str: !input car_charge_limit_csv
-  #car_charge_limit_list: "{{ car_charge_limit_str.split(',') }}"
-
-  # Store as integer array
+  #####################################
+  # Set car charge limit based on which week day
+  #####################################
   mon: !input car_charge_limit_monday
   tue: !input car_charge_limit_tuesday
   wed: !input car_charge_limit_wednesday
@@ -416,19 +412,23 @@ variables:
   fri: !input car_charge_limit_friday
   sat: !input car_charge_limit_saturday
   sun: !input car_charge_limit_sunday
+
+  # Store as integer list
   car_charge_limit_list: '{{ [mon, tue, wed, thu, fri, sat, sun] }}'
   todayIndex: '{{ now().weekday() }}'
   todayChargeLimit: '{{ car_charge_limit_list[todayIndex] }}'
 
   #####################################
-  # Set charge limit base on weather forcast
+  # Set car charge limit based on weather forecast
   #####################################
+  charge_car_base_on_weather: !input charge_car_base_on_weather
   weather_provider: !input weather_provider
-  forecast_interval: !input forecast_interval
   forecast_index: !input forecast_index
   forecast_attribute: !input forecast_attribute
 
-  # Charge limit array for the next N days excluding today
+  # Not all intervals are available for all providers. Possible values: "hourly", "twice_daily", "daily"
+  forecast_interval: "daily"
+  # Charge limit list for the next N days excluding today
   periodChargeLimitList: >
     {% set data = namespace(numbers=[]) %}
     {% for i in range(1, forecast_index + 1, 1) %}
@@ -507,57 +507,69 @@ action:
         - !input car_number_charging_amps
   - delay: "{{ wait_command_execute }}"
 
-  # Get weather forecast data
-  - service: weather.get_forecasts
-    target:
-      entity_id: !input weather_provider
-    data:
-      type: "{{forecast_interval}}"
-    response_variable: weather_forecast
-
-  # Show current status
-  - service: system_log.write
-    data_template:
-      message: |-
-        Status: car_charge_limit_list={{car_charge_limit_list}}
-        todayIndex={{todayIndex}}, todayChargeLimit={{todayChargeLimit}}
-        periodChargeLimitList={{periodChargeLimitList}}, periodMaxChargeLimit={{periodMaxChargeLimit}}
-        weather_today={{ weather_forecast[weather_provider]['forecast'][0][forecast_attribute] }}
-      level: warning
-
-  # Should honour existing charge limit set by app or car, unless car_charge_limit_list for day is set, in which case
-  # charge limit will be adjusted according to weather forecast provided higher charge is required in the future.
+  # Should honour existing charge limit set by app or car, unless charge limit for day is set.
+  # If charge limit for day is not set, ie. set to -1, charge limit will be set according to the Tesla app.
+  # If charge limit for day is set and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.
+  # If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to a higher limit if set within a rainy forecast period.
+  # If charge car based on weather is enabled, a weather provider must be configured.
   - choose:
     - conditions: >
         {{ todayChargeLimit >= 0 and todayChargeLimit <= 100 }}
       sequence:
-        - variables:
-            periodForecastList: >
-              {% set data = namespace(strings=[]) %}
-              {% for day in range(1, forecast_index + 1, 1) %}
-                {% set data.strings = data.strings + [weather_forecast[weather_provider]['forecast'][day][forecast_attribute]] %}
-              {% endfor %}
-              {{ data.strings }}
-            finalChargeLimit: >-
-              {% if 'rainy' in periodForecastList and periodMaxChargeLimit > todayChargeLimit %}
-                {{ periodMaxChargeLimit }}
-              {% else %}
-                {{ todayChargeLimit }} 
-              {% endif %}
+        - choose:
+          - conditions: >
+              {{ charge_car_base_on_weather }}
+            sequence:
+              # Get weather forecast data
+              - service: weather.get_forecasts
+                target:
+                  entity_id: !input weather_provider
+                data:
+                  type: "{{forecast_interval}}"
+                response_variable: weather_forecast
 
-        - service: system_log.write
-          data_template:
-            message: |-
-              Status: periodForecastList={{periodForecastList}}, finalChargeLimit={{finalChargeLimit}}
-            level: warning
+              - variables:
+                  periodForecastList: >
+                    {% set data = namespace(strings=[]) %}
+                    {% for day in range(1, forecast_index + 1, 1) %}
+                      {% set data.strings = data.strings + [weather_forecast[weather_provider]['forecast'][day][forecast_attribute]] %}
+                    {% endfor %}
+                    {{ data.strings }}
 
-        - service: number.set_value
-          data:
-            value: "{{ finalChargeLimit }}"
-          target:
-            entity_id: !input car_number_charge_limit
-        - delay: "{{ wait_command_execute }}"
+                  # See https://www.home-assistant.io/integrations/weather/
+                  # Some possible values: rainy, cloudy, partlycloudy
+                  finalChargeLimit: >-
+                    {% if 'rainy' in periodForecastList and periodMaxChargeLimit > todayChargeLimit %}
+                      {{ periodMaxChargeLimit }}
+                    {% else %}
+                      {{ todayChargeLimit }} 
+                    {% endif %}
 
+              # Show current status
+              - service: system_log.write
+                data_template:
+                  message: |-
+                    {{now()}}: 
+                    finalChargeLimit={{finalChargeLimit}}, todayChargeLimit={{todayChargeLimit}}, periodMaxChargeLimit={{periodMaxChargeLimit}},
+                    periodChargeLimitList={{periodChargeLimitList}}, periodForecastList={{periodForecastList}},
+                    todayIndex={{todayIndex}}, car_charge_limit_list={{car_charge_limit_list}}, weather_today={{ weather_forecast[weather_provider]['forecast'][0][forecast_attribute] }}
+                  #level: warning
+                  level: info
+
+              - service: number.set_value
+                data:
+                  value: "{{ finalChargeLimit }}"
+                target:
+                  entity_id: !input car_number_charge_limit
+              - delay: "{{ wait_command_execute }}"
+
+          default:
+            - service: number.set_value
+              data:
+                value: "{{ todayChargeLimit }}"
+              target:
+                entity_id: !input car_number_charge_limit
+            - delay: "{{ wait_command_execute }}"
 
   #####################################
   # Main while loop

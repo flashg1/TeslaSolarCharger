@@ -67,6 +67,8 @@ Features
 -	Charge from excess solar adjusting Tesla car charging current according to feedback loop value "Grid Power Net".  The "Grid Power Net" sensor expresses negative power in Watts when exporting to grid, and positive power when consuming from grid.
 -   Support multi-day solar charging using sunrise trigger to start and sunset trigger to stop.
 -   Compatible with off-peak night time charging.
+-   Configurable daily car charge limit for the next 7 days including today.  Default is to use the Tesla app charge limit.
+-   Automatically adjust to a higher car charge limit if set within a rainy forecast period.  Requires 7 days charge limit settings above.  The objective is to charge more ahead of a rainy period.  Default disabled.
 
 
 How to use
@@ -100,6 +102,13 @@ Work-arounds:
 1. Run the automation manually by selecting the automation and then select "Run Actions".
 2. Turn polling off, then on.
 3. Press the "Force data update" button before and after plugging in the charger.
+
+Daily car charge limit settings
+-------------------------------
+- If charge limit for day is not set, ie. set to -1, charge limit will be set according to the Tesla app.
+- If charge limit for day is set and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.
+- If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to a higher limit if set within a rainy forecast period.
+- If charge car based on weather is enabled, a weather provider must be configured.
 
 
 GUI display examples
