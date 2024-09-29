@@ -68,7 +68,7 @@ Features
 -   Support multi-day solar charging using sunrise trigger to start and sunset trigger to stop.
 -   Compatible with off-peak night time charging.
 -   Configurable daily car charge limit for 7 days.  Default is to use the Tesla app charge limit.
--   Automatically adjust to a higher car charge limit if set within a rainy forecast period.  The highest charge limit is selected from the charge limit on bad weather setting together with the 7 days charge limit settings that are within the forecast period.  The objective is to charge more before a rainy period.  Default disabled.
+-   Automatically adjust to the highest charge limit set within the rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
 
 
 How to use
@@ -107,8 +107,9 @@ Daily car charge limit settings
 -------------------------------
 - If charge limit for day is not set, ie. set to -1, charge limit will be set according to the Tesla app.
 - If charge limit for day is set and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.
-- If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within a rainy forecast period taking into account the car charge limit on bad weather setting.
-- If charge car based on weather is enabled, a weather provider must be configured.
+- If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.
+- If charge car based on weather is enabled, charge limit and weather provider settings must be configured.
+
 
 
 GUI display examples
