@@ -203,17 +203,12 @@ blueprint:
           unit_of_measurement: percent
           mode: slider
 
-    #car_charge_limit_csv:
-    #  name: Tesla daily charge limit
-    #  description: Percentage charge limit starting Monday to Sunday in CSV format, eg. 70,70,70,70,90,90,90 (min=0, max=100, ignore=-1).
-    #  default: "-1,-1,-1,-1,-1,-1,-1"
-
     #####################################
     # Weather forecast
     #####################################
     charge_car_base_on_weather:
       name: Adjust daily car charge limit based on weather
-      description: Automatically adjust to a higher charge limit if set within a rainy forecast period.  Requires 7 days charge limit settings above.
+      description: Automatically adjust to a higher charge limit if set within a rainy forecast period. Requires 7 days charge limit settings above.
       default: false
       selector:
         boolean:
@@ -239,10 +234,21 @@ blueprint:
 
     forecast_attribute:
       name: Weather condition field name
-      description: Field name for forecast attribute (default="condition").  See https://www.home-assistant.io/integrations/weather/
+      description: Field name for forecast attribute (default="condition"). See https://www.home-assistant.io/integrations/weather/
       default: "condition"
       selector:
         text:
+
+    car_charge_limit_bad_weather:
+      name: Car charge limit on bad weather forecast
+      description: Charge limit to set on or before bad weather period. This will be used unless there is a higher setting within the forecast period.
+      default: 90
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: percent
+          mode: slider
 
     #####################################
     # Home battery config (placeholder only)
@@ -412,7 +418,7 @@ variables:
   fri: !input car_charge_limit_friday
   sat: !input car_charge_limit_saturday
   sun: !input car_charge_limit_sunday
-
+  
   # Store as integer list
   car_charge_limit_list: '{{ [mon, tue, wed, thu, fri, sat, sun] }}'
   todayIndex: '{{ now().weekday() }}'
@@ -425,12 +431,13 @@ variables:
   weather_provider: !input weather_provider
   forecast_index: !input forecast_index
   forecast_attribute: !input forecast_attribute
+  carChargeLimitBadWeather: !input car_charge_limit_bad_weather
 
   # Not all intervals are available for all providers. Possible values: "hourly", "twice_daily", "daily"
   forecast_interval: "daily"
-  # Charge limit list for the next N days excluding today
+  # Charge limit list for the next N days excluding today. Also take into account carChargeLimitBadWeather.
   periodChargeLimitList: >
-    {% set data = namespace(numbers=[]) %}
+    {% set data = namespace(numbers=[carChargeLimitBadWeather]) %}
     {% for i in range(1, forecast_index + 1, 1) %}
       {% set day = (todayIndex + i) % 7 %}
       {% set data.numbers = data.numbers + [car_charge_limit_list[day]] %}
@@ -510,7 +517,7 @@ action:
   # Should honour existing charge limit set by app or car, unless charge limit for day is set.
   # If charge limit for day is not set, ie. set to -1, charge limit will be set according to the Tesla app.
   # If charge limit for day is set and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.
-  # If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to a higher limit if set within a rainy forecast period.
+  # If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within a rainy forecast period taking into account the car charge limit on bad weather setting.
   # If charge car based on weather is enabled, a weather provider must be configured.
   - choose:
     - conditions: >
@@ -550,7 +557,7 @@ action:
                 data_template:
                   message: |-
                     {{now()}}: 
-                    finalChargeLimit={{finalChargeLimit}}, todayChargeLimit={{todayChargeLimit}}, periodMaxChargeLimit={{periodMaxChargeLimit}},
+                    finalChargeLimit={{finalChargeLimit}}, todayChargeLimit={{todayChargeLimit}}, carChargeLimitBadWeather={{carChargeLimitBadWeather}}, periodMaxChargeLimit={{periodMaxChargeLimit}},
                     periodChargeLimitList={{periodChargeLimitList}}, periodForecastList={{periodForecastList}},
                     todayIndex={{todayIndex}}, car_charge_limit_list={{car_charge_limit_list}}, weather_today={{ weather_forecast[weather_provider]['forecast'][0][forecast_attribute] }}
                   #level: warning
