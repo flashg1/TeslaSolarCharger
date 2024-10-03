@@ -1,5 +1,5 @@
 # Tesla Solar Charger
-Home Assistant Blueprint to charge Tesla car using surplus solar electricity and weather forcast.
+Home Assistant Blueprint to charge Tesla car using surplus solar electricity and weather forecast.
 
 ###############################################################################
 # Disclaimer:
