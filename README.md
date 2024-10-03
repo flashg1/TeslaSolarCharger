@@ -1,5 +1,5 @@
 # Tesla Solar Charger
-Home Assistant smart charger Blueprint to charge Tesla car using surplus solar electricity.
+Home Assistant smart charger Blueprint to charge Tesla car using surplus solar electricity and weather forcast.
 
 ###############################################################################
 # Disclaimer:
@@ -68,7 +68,7 @@ Features
 -   Support multi-day solar charging using sunrise trigger to start and sunset trigger to stop.
 -   Compatible with off-peak night time charging.
 -   Configurable daily car charge limit for 7 days.  Default is to use the Tesla app charge limit.
--   Automatically adjust to the highest charge limit set within the rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
+-   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
 -   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
 
 

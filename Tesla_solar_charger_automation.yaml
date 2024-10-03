@@ -6,11 +6,7 @@
 #
 ###############################################################################
 # Objective:
-# - To charge Tesla from excess solar which would have otherwise be exported to grid.
-#
-# Note:
-# - Credit goes to Alphaemef for the solar charger Blueprint.
-#   https://gist.github.com/Alphaemef/70f203cc6a5acb75d987ae88d9be2edf
+# - To charge Tesla car using excess solar and weather forecast.
 #
 # History:
 # 20/6/2023 Inspiration from Alphaemef's Tesla Solar Charger Blueprint 30/4/2023.
@@ -19,7 +15,7 @@
 blueprint:
 
   name: Tesla solar charger automation
-  description: Smart charger to charge Tesla car using surplus solar electricity.
+  description: To charge Tesla car using surplus solar electricity and weather forecast.
   domain: automation
 
 ###############################################################################
@@ -128,7 +124,7 @@ blueprint:
     #####################################
     car_charge_limit_monday:
       name: Monday
-      description: Car charge limit for day (-1 = Use app charge limit).
+      description: Car charge limit for day (-1 = Use Tesla app charge limit).
       default: -1
       selector:
         number:
@@ -139,7 +135,7 @@ blueprint:
 
     car_charge_limit_tuesday:
       name: Tuesday
-      description: Car charge limit for day (-1 = Use app charge limit).
+      description: Car charge limit for day (-1 = Use Tesla app charge limit).
       default: -1
       selector:
         number:
@@ -150,7 +146,7 @@ blueprint:
 
     car_charge_limit_wednesday:
       name: Wednesday
-      description: Car charge limit for day (-1 = Use app charge limit).
+      description: Car charge limit for day (-1 = Use Tesla app charge limit).
       default: -1
       selector:
         number:
@@ -161,7 +157,7 @@ blueprint:
 
     car_charge_limit_thursday:
       name: Thursday
-      description: Car charge limit for day (-1 = Use app charge limit).
+      description: Car charge limit for day (-1 = Use Tesla app charge limit).
       default: -1
       selector:
         number:
@@ -172,7 +168,7 @@ blueprint:
 
     car_charge_limit_friday:
       name: Friday
-      description: Car charge limit for day (-1 = Use app charge limit).
+      description: Car charge limit for day (-1 = Use Tesla app charge limit).
       default: -1
       selector:
         number:
@@ -183,7 +179,7 @@ blueprint:
 
     car_charge_limit_saturday:
       name: Saturday
-      description: Car charge limit for day (-1 = Use app charge limit).
+      description: Car charge limit for day (-1 = Use Tesla app charge limit).
       default: -1
       selector:
         number:
@@ -194,7 +190,7 @@ blueprint:
 
     car_charge_limit_sunday:
       name: Sunday
-      description: Car charge limit for day (-1 = Use app charge limit).
+      description: Car charge limit for day (-1 = Use Tesla app charge limit).
       default: -1
       selector:
         number:
@@ -208,7 +204,7 @@ blueprint:
     #####################################
     charge_car_base_on_weather:
       name: Adjust daily car charge limit based on weather
-      description: Automatically adjust to the highest charge limit set within the rainy forecast period. Charge limit and weather provider settings must be configured.
+      description: Automatically adjust to the highest charge limit set within a rainy forecast period. Charge limit and weather provider settings must be configured.
       default: false
       selector:
         boolean:
