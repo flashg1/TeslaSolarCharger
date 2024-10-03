@@ -7,10 +7,6 @@ Home Assistant Blueprint to charge Tesla car using surplus solar electricity and
 # Even though this automation has been created with care, the author cannot be responsible for any damage caused by this automation.  Use at your own risk.
 #
 ###############################################################################
-# Note:
-# - Credit goes to Alphaemef for the original solar charger Blueprint.
-#   https://github.com/Alphaemef/SolarBalance-Suite
-###############################################################################
 
 ![Screenshot_20230702-094232_Home Assistant](https://github.com/flashg1/TeslaSolarCharger/assets/122323972/58d1df89-905b-422c-8542-0081b9fa342f)
 
