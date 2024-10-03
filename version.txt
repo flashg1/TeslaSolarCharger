@@ -3,7 +3,7 @@ Tesla Solar Charger
 
 v1.1    26/9/2024
 -   Configurable daily car charge limit for 7 days.
--   Automatically adjust to the highest charge limit set within the rainy forecast period.
+-   Automatically adjust to the highest charge limit set within a rainy forecast period.
 
 v1.0    2/10/2023
 -   For exit loop criteria, need to test charger switched off condition before charge from grid condition.
