@@ -235,10 +235,10 @@ blueprint:
       selector:
         text:
 
-    car_charge_limit_bad_weather:
+    car_charge_limit_on_bad_weather:
       name: Car charge limit on bad weather forecast
-      description: Charge limit to set on or before bad weather period. This will be used unless there is a higher setting within the forecast period.
-      default: 90
+      description: Charge limit to set before bad weather forecast. This will be used unless there is a higher setting within the forecast period.
+      default: 85
       selector:
         number:
           min: 0
@@ -427,13 +427,13 @@ variables:
   weather_provider: !input weather_provider
   forecast_index: !input forecast_index
   forecast_attribute: !input forecast_attribute
-  carChargeLimitBadWeather: !input car_charge_limit_bad_weather
+  carChargeLimitOnBadWeather: !input car_charge_limit_on_bad_weather
 
   # Not all intervals are available for all providers. Possible values: "hourly", "twice_daily", "daily"
   forecast_interval: "daily"
-  # Charge limit list for the next N days excluding today. Also take into account carChargeLimitBadWeather.
+  # Charge limit list for the next N days excluding today. Also take into account carChargeLimitOnBadWeather.
   periodChargeLimitList: >
-    {% set data = namespace(numbers=[carChargeLimitBadWeather]) %}
+    {% set data = namespace(numbers=[carChargeLimitOnBadWeather]) %}
     {% for i in range(1, forecast_index + 1, 1) %}
       {% set day = (todayIndex + i) % 7 %}
       {% set data.numbers = data.numbers + [car_charge_limit_list[day]] %}
@@ -541,7 +541,7 @@ action:
 
                   # See https://www.home-assistant.io/integrations/weather/
                   # Some possible values: rainy, cloudy, partlycloudy
-                  finalChargeLimit: >-
+                  periodFinalChargeLimit: >-
                     {% if 'rainy' in periodForecastList and periodMaxChargeLimit > todayChargeLimit %}
                       {{ periodMaxChargeLimit }}
                     {% else %}
@@ -553,7 +553,7 @@ action:
                 data_template:
                   message: |-
                     {{now()}}: 
-                    finalChargeLimit={{finalChargeLimit}}, todayChargeLimit={{todayChargeLimit}}, carChargeLimitBadWeather={{carChargeLimitBadWeather}}, periodMaxChargeLimit={{periodMaxChargeLimit}},
+                    periodFinalChargeLimit={{periodFinalChargeLimit}}, todayChargeLimit={{todayChargeLimit}}, carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}}, periodMaxChargeLimit={{periodMaxChargeLimit}},
                     periodChargeLimitList={{periodChargeLimitList}}, periodForecastList={{periodForecastList}},
                     todayIndex={{todayIndex}}, car_charge_limit_list={{car_charge_limit_list}}, weather_today={{ weather_forecast[weather_provider]['forecast'][0][forecast_attribute] }}
                   #level: warning
@@ -561,7 +561,7 @@ action:
 
               - service: number.set_value
                 data:
-                  value: "{{ finalChargeLimit }}"
+                  value: "{{ periodFinalChargeLimit }}"
                 target:
                   entity_id: !input car_number_charge_limit
               - delay: "{{ wait_command_execute }}"
