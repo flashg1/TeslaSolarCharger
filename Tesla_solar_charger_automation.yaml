@@ -368,6 +368,9 @@ variables:
   #wait_current_change: "00:00:0.3"
   wait_current_change: 0.3
 
+  # Wait in seconds after setting car charge limit to allow user override when not using Tesla app charge limit.
+  wait_charge_limit: 30
+  
   # Time to wait in seconds for command to execute after sending command.
   wait_command_execute: 5
   #wait_command_execute_str: "00:00:{{ wait_command_execute }}"
@@ -564,7 +567,7 @@ action:
                   value: "{{ periodFinalChargeLimit }}"
                 target:
                   entity_id: !input car_number_charge_limit
-              - delay: "{{ wait_command_execute }}"
+              - delay: "{{ wait_charge_limit }}"
 
           default:
             - service: number.set_value
@@ -572,7 +575,7 @@ action:
                 value: "{{ todayChargeLimit }}"
               target:
                 entity_id: !input car_number_charge_limit
-            - delay: "{{ wait_command_execute }}"
+            - delay: "{{ wait_charge_limit }}"
 
   #####################################
   # Main while loop
