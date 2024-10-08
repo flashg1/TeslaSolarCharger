@@ -103,10 +103,9 @@ Work-arounds:
 Daily car charge limit settings
 -------------------------------
 - If charge limit for day is not set, ie. set to -1, charge limit will be set according to the Tesla app.
-- If charge limit for day is set and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.
-- If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.
+- If charge limit for day is set and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.  If necessary, user can manually override the charge limit setting within 30 seconds after it has been set by this automation.
+- If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.  If necessary, user can manually override the charge limit setting within 30 seconds after it has been set by this automation.
 - If charge car based on weather is enabled, charge limit and weather provider settings must be configured.
-
 
 
 GUI display examples
