@@ -220,10 +220,10 @@ blueprint:
     forecast_index:
       name: Forecast days
       description: Number of days to forecast weather excluding today.
-      default: 2
+      default: 1
       selector:
         number:
-          min: 0
+          min: 1
           max: 6
           mode: slider
           unit_of_measurement: day
@@ -237,8 +237,8 @@ blueprint:
 
     car_charge_limit_on_bad_weather:
       name: Car charge limit on bad weather forecast
-      description: Charge limit to set before bad weather forecast. This will be used unless there is a higher setting within the forecast period.
-      default: 85
+      description: Charge limit to set on bad weather forecast. This will be used unless there is a higher setting within the forecast period.
+      default: 80
       selector:
         number:
           min: 0
