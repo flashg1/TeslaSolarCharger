@@ -1,8 +1,9 @@
 Tesla Solar Charger
 ===================
 
-v1.2	8/10/2024
+v1.1b	8/10/2024
 -   Wait 30 seconds after setting car charge limit to allow user override when not using Tesla app charge limit.
+-   Finalised defaults.
 
 v1.1    26/9/2024
 -   Configurable daily car charge limit for 7 days.
