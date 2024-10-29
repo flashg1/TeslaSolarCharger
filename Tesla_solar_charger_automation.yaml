@@ -505,12 +505,13 @@ action:
   - delay: "{{ wait_command_execute }}"
 
   # Save current Tesla parameters for later restore.
+  # Restoring charge limit to a higher value at script end will trigger Tesla to charge to the higher value. So don't save car_number_charge_limit in scene.
   - service: scene.create
     data:
       scene_id: tesla_solar_charger_script_scene
       snapshot_entities:
-        - !input car_number_charge_limit
         - !input car_number_charging_amps
+  #     - !input car_number_charge_limit
   - delay: "{{ wait_command_execute }}"
 
   # Should honour existing charge limit set by app or car, unless charge limit for day is set.
