@@ -3,6 +3,7 @@ Tesla Solar Charger
 
 v1.1c   29/10/2024
 -   Restoring charge limit to a higher value at script end will trigger Tesla to charge to the higher value. So don't save car_number_charge_limit in scene.
+-   Cannot restore car_number_charging_amps reliably, so disabled scene save and restore.
 
 v1.1b	8/10/2024
 -   Wait 30 seconds after setting car charge limit to allow user override when not using Tesla app charge limit.

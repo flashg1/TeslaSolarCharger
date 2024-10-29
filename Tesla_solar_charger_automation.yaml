@@ -506,13 +506,14 @@ action:
 
   # Save current Tesla parameters for later restore.
   # Restoring charge limit to a higher value at script end will trigger Tesla to charge to the higher value. So don't save car_number_charge_limit in scene.
-  - service: scene.create
-    data:
-      scene_id: tesla_solar_charger_script_scene
-      snapshot_entities:
-        - !input car_number_charging_amps
-  #     - !input car_number_charge_limit
-  - delay: "{{ wait_command_execute }}"
+  # Cannot restore car_number_charging_amps reliably, possibly due to script crash or car not available.
+  #- service: scene.create
+  #  data:
+  #    scene_id: tesla_solar_charger_script_scene
+  #    snapshot_entities:
+  #      - !input car_number_charging_amps
+  #      - !input car_number_charge_limit
+  #- delay: "{{ wait_command_execute }}"
 
   # Should honour existing charge limit set by app or car, unless charge limit for day is set.
   # If charge limit for day is not set, ie. set to -1, charge limit will be set according to the Tesla app.
@@ -743,10 +744,10 @@ action:
                 state: "off"
             sequence:
               # Restore previous settings.
-              - service: scene.turn_on
-                target:
-                  entity_id: scene.tesla_solar_charger_script_scene
-              - delay: "{{ wait_command_execute }}"
+              #- service: scene.turn_on
+              #  target:
+              #    entity_id: scene.tesla_solar_charger_script_scene
+              #- delay: "{{ wait_command_execute }}"
 
               # Get the latest data from Tesla to update HA before exiting script.
               - service: button.press
@@ -851,10 +852,10 @@ action:
       - delay: "{{ wait_charger_off }}"
 
   # Restore previous settings.
-  - service: scene.turn_on
-    target:
-      entity_id: scene.tesla_solar_charger_script_scene
-  - delay: "{{ wait_command_execute }}"
+  #- service: scene.turn_on
+  #  target:
+  #    entity_id: scene.tesla_solar_charger_script_scene
+  #- delay: "{{ wait_command_execute }}"
 
   # Get the latest data from Tesla to update HA before exiting script.
   - service: button.press
