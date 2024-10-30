@@ -23,6 +23,7 @@ Installation
 template:
 
     # For Enphase, grid_power_net is an integer in watts. Positive value means importing power from grid. Negative value means exporting power to grid.
+    # For other inverter brands, adjust the formula according to your setup.
     - sensor:
         name: Grid Power Net
         state_class: measurement
@@ -81,7 +82,7 @@ How to use
 
 Option 1
 --------
-To charge from excess solar, just plug in the charger.  The initial charge current is 6A.  After about 1 minute it will adjust the current according to amount of excess power exported to grid.
+To charge from excess solar, just plug in the charger.  The initial charge current is 5A.  After about 1 minute it will adjust the current according to amount of excess power exported to grid.
 
 Option 2
 --------

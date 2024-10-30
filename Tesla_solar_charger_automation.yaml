@@ -351,7 +351,7 @@ variables:
   # Constants
   #####################################
   # Tesla UMC charger initial minimum charging current is 5A, after that it can vary between 0A and 15A.
-  initial_charge_current: 6
+  initial_charge_current: 5
   #max_allowable_current_delta: 6
 
   # Time to wait in seconds for car to wake up.
@@ -748,6 +748,13 @@ action:
               #  target:
               #    entity_id: scene.tesla_solar_charger_script_scene
               #- delay: "{{ wait_command_execute }}"
+
+              # Set minimal current before exit to avoid high current when starting next charging session.
+              - service: number.set_value
+                data:
+                  value: "{{ initial_charge_current }}"
+                target:
+                  entity_id: !input car_number_charging_amps
 
               # Get the latest data from Tesla to update HA before exiting script.
               - service: button.press
