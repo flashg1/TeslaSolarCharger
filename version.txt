@@ -6,6 +6,7 @@ v1.1c   29/10/2024
 -   Cannot restore car_number_charging_amps reliably, so disabled scene save and restore.
 -   Set minimal current before exit to avoid high current when starting next charging session.
 -   Enforced valid charge limit range 50-100% for Tesla API.
+-   Refactored setting car charge limit code.
 
 v1.1b	8/10/2024
 -   Wait 30 seconds after setting car charge limit to allow user override when not using Tesla app charge limit.

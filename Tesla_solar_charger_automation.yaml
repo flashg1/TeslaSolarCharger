@@ -426,12 +426,12 @@ variables:
   # Store as integer list
   car_charge_limit_list: '{{ [mon, tue, wed, thu, fri, sat, sun] }}'
   todayIndex: '{{ now().weekday() }}'
-  todayChargeLimit: '{{ car_charge_limit_list[todayIndex] }}'
+  todayCarChargeLimit: '{{ car_charge_limit_list[todayIndex] }}'
 
   #####################################
   # Set car charge limit based on weather forecast
   #####################################
-  charge_car_base_on_weather: !input charge_car_base_on_weather
+  chargeCarBaseOnWeather: !input charge_car_base_on_weather
   weather_provider: !input weather_provider
   forecast_index: !input forecast_index
   forecast_attribute: !input forecast_attribute
@@ -522,25 +522,18 @@ action:
 
   # Set car charge limit.
   # Should honour existing charge limit set by app or car, unless charge limit for day is set.
-  # If charge limit for day is not set, ie. set to -1, charge limit will be set according to the Tesla app.
+  # If charge limit for day is not set, ie. set to 49, charge limit will be set according to the Tesla app.
   # If charge limit for day is set and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.
   # If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.
   # If charge car based on weather is enabled, charge limit and weather provider settings must be configured.
   - choose:
     - conditions: >
-        {{ todayChargeLimit >= car_charge_limit_min and todayChargeLimit <= car_charge_limit_max }}
+        {{ todayCarChargeLimit >= car_charge_limit_min and todayCarChargeLimit <= car_charge_limit_max }}
       sequence:
-        # Set charge limit to car_charge_limit_min before changing it again later to give indication of change. User has 30 seconds to override once set.
-        - service: number.set_value
-          data:
-            value: "{{ car_charge_limit_min }}"
-          target:
-            entity_id: !input car_number_charge_limit
-        - delay: "{{ wait_command_execute }}"
 
         - choose:
           - conditions: >
-              {{ charge_car_base_on_weather }}
+              {{ chargeCarBaseOnWeather }}
             sequence:
               # Get weather forecast data
               - service: weather.get_forecasts
@@ -550,48 +543,67 @@ action:
                   type: "{{forecast_interval}}"
                 response_variable: weather_forecast
 
-              - variables:
-                  periodForecastList: >
-                    {% set data = namespace(strings=[]) %}
-                    {% for day in range(1, forecast_index + 1, 1) %}
-                      {% set data.strings = data.strings + [weather_forecast[weather_provider]['forecast'][day][forecast_attribute]] %}
-                    {% endfor %}
-                    {{ data.strings }}
+        - variables:
+            # Period forecast list excluding today
+            periodForecastList: >
+              {% set data = namespace(strings=[]) %}
+              {% if chargeCarBaseOnWeather %}
+                {% for day in range(1, forecast_index + 1, 1) %}
+                  {% set data.strings = data.strings + [weather_forecast[weather_provider]['forecast'][day][forecast_attribute]] %}
+                {% endfor %}
+              {% endif %}
+              {{ data.strings }}
 
-                  # See https://www.home-assistant.io/integrations/weather/
-                  # Some possible values: rainy, cloudy, partlycloudy
-                  periodFinalChargeLimit: >-
-                    {% if 'rainy' in periodForecastList and badWeatherPeriodMaxChargeLimit > todayChargeLimit %}
-                      {{ badWeatherPeriodMaxChargeLimit }}
-                    {% else %}
-                      {{ todayChargeLimit }} 
-                    {% endif %}
+            weather_today: >
+              {% if chargeCarBaseOnWeather %}
+                {{ weather_forecast[weather_provider]['forecast'][0][forecast_attribute] }}
+              {% else %}
+                {{ "weather forecast disabled" }}
+              {% endif %}
 
-              # Show current status
-              - service: system_log.write
-                data_template:
-                  message: |-
-                    {{now()}}: 
-                    periodFinalChargeLimit={{periodFinalChargeLimit}}, todayChargeLimit={{todayChargeLimit}}, carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}}, badWeatherPeriodMaxChargeLimit={{badWeatherPeriodMaxChargeLimit}},
-                    badWeatherPeriodChargeLimitList={{badWeatherPeriodChargeLimitList}}, periodForecastList={{periodForecastList}},
-                    todayIndex={{todayIndex}}, car_charge_limit_list={{car_charge_limit_list}}, weather_today={{ weather_forecast[weather_provider]['forecast'][0][forecast_attribute] }}
-                  #level: warning
-                  level: info
+            # See https://www.home-assistant.io/integrations/weather/
+            # Some possible values: rainy, cloudy, partlycloudy
+            finalCarChargeLimit: >-
+              {% if chargeCarBaseOnWeather and 'rainy' in periodForecastList and badWeatherPeriodMaxChargeLimit > todayCarChargeLimit %}
+                {{ badWeatherPeriodMaxChargeLimit }}
+              {% else %}
+                {{ todayCarChargeLimit }} 
+              {% endif %}
 
-              - service: number.set_value
-                data:
-                  value: "{{ periodFinalChargeLimit }}"
-                target:
-                  entity_id: !input car_number_charge_limit
-              - delay: "{{ wait_charge_limit }}"
+            tmpCarChargeLimit: >-
+              {% if finalCarChargeLimit > car_charge_limit_min %}
+                {{ finalCarChargeLimit - 1 }}
+              {% else %}
+                {{ finalCarChargeLimit + 1 }} 
+              {% endif %}
 
-          default:
-            - service: number.set_value
-              data:
-                value: "{{ todayChargeLimit }}"
-              target:
-                entity_id: !input car_number_charge_limit
-            - delay: "{{ wait_charge_limit }}"
+        # Show current status
+        - service: system_log.write
+          data_template:
+            message: |-
+              {{now()}}: 
+              finalCarChargeLimit={{finalCarChargeLimit}}, tmpCarChargeLimit={{tmpCarChargeLimit}}, todayCarChargeLimit={{todayCarChargeLimit}}, carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}},
+              badWeatherPeriodMaxChargeLimit={{badWeatherPeriodMaxChargeLimit}}, badWeatherPeriodChargeLimitList={{badWeatherPeriodChargeLimitList}}, periodForecastList={{periodForecastList}},
+              todayIndex={{todayIndex}}, car_charge_limit_list={{car_charge_limit_list}}, weather_today={{weather_today}}
+            #level: warning
+            level: info
+
+        # Changing charge limit can turn on or off charger by car depending on whether charge limit has been reached or not, so minimise difference between tmpCarChargeLimit and finalCarChargeLimit.
+        # Set charge limit to different value before changing it again later to give indication of change.
+        - service: number.set_value
+          data:
+            value: "{{ tmpCarChargeLimit }}"
+          target:
+            entity_id: !input car_number_charge_limit
+        - delay: "{{ wait_command_execute }}"
+
+        # User has 30 seconds to override finalCarChargeLimit in app once set.
+        - service: number.set_value
+          data:
+            value: "{{ finalCarChargeLimit }}"
+          target:
+            entity_id: !input car_number_charge_limit
+        - delay: "{{ wait_charge_limit }}"
 
   #####################################
   # Main while loop
