@@ -133,6 +133,7 @@ appliance1_extra_entity: sensor.battery
 # optional 3 main bubble icons for clickable entities
 grid_entity: sensor.grid_power_net
 house_entity: sensor.envoy_[YourEnvoyId]_current_power_consumption
+house_extra_entity: number.charge_limit
 generation_entity: sensor.solar_power_production
 
 ```
