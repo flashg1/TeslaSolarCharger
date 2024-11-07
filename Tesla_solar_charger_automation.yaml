@@ -664,6 +664,7 @@ action:
 
         - variables:
             # For Enphase, grid_power_net is an integer in watts. Positive value means importing power from grid. Negative value means exporting power to grid.
+            # For other inverter brands, adjust the formula to conform with above requirement according to your setup.
             grid_power_net: !input sensor_grid_power_net
 
             homebattery_power_net: !input sensor_homebattery_power_net
