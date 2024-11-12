@@ -849,19 +849,20 @@ action:
               - delay: "00:00:00"
 
 
-        # Get the latest data from Tesla to update HA.
-        - service: button.press
-          data: {}
-          target:
-            entity_id: !input car_button_forceupdate_ha
-        - delay: "{{ wait_command_execute }}"
-
-        # Sleep to ensure HA is updated before the next read.
+        # Sleep enough to allow solar inverter updates. Should be ok to sleep longer to avoid changing charge current too often.
+        # Other things can happen during sleep time, eg. car unplugged.
         - delay:
             hours: 0
             minutes: 0
             seconds: !input wait_grid_power_net_update
             milliseconds: 0
+
+        # Get latest conditions from Tesla to update HA as last step before checking these conditions at beginning of repeat loop.
+        - service: button.press
+          data: {}
+          target:
+            entity_id: !input car_button_forceupdate_ha
+        - delay: "{{ wait_command_execute }}"
 
   #####################################
   # Exit script

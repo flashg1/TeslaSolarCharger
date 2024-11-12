@@ -1,6 +1,9 @@
 Tesla Solar Charger
 ===================
 
+v1.1e   13/11/2024
+-   Get latest conditions from Tesla to update HA as last step before checking these conditions at beginning of repeat loop.
+
 v1.1d   7/11/2024
 -   Updated doc.
 -   Setting the charge limit might cause car to turn on charger, so must get latest update before proceeding. Otherwise script can exit without turning off charger.
