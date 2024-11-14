@@ -15,7 +15,7 @@
 blueprint:
 
   name: Tesla solar charger automation
-  description: To charge Tesla car using surplus solar electricity and weather forecast.
+  description: To charge Tesla car using surplus solar electricity and weather forecast. See https://github.com/flashg1/TeslaSolarCharger for details.
   domain: automation
 
 ###############################################################################
@@ -33,29 +33,6 @@ blueprint:
       selector:
         entity:
           domain: sensor
-
-    # https://github.com/home-assistant/frontend/issues/12281
-    #toggle_charge_from_grid:
-    #  name: Charge from Grid Toggle
-    #  description: Turn on to charge from grid at constant current.
-    #  default: false
-    #  selector:
-    #    boolean: {}
-
-    toggle_stop_charger:
-      name: Stop charger toggle
-      description: Toggle on to stop charger script (Settings > Devices & Services > Helpers > Create helper > Toggle). Delayed by "Wait grid power net update" value.
-      #default: input_boolean.tesla_model3_stop_charging
-      selector:
-        entity:
-          domain: input_boolean
-
-    #stop_charger_button:
-    #  name: Stop Charger Button
-    #  description: Create helper button to stop this script when pressed (Settings > Devices & Services > Helpers > Create helper > Button).
-    #  selector:
-    #    entity:
-    #      domain: input_button
 
     charger_voltage:
       name: Charger voltage
@@ -113,7 +90,7 @@ blueprint:
 
     sunrise_elevation_start_trigger:
       name: Sunrise elevation start trigger
-      description: Specify elevation to start charging relative to sunrise. Default is to start when sun is 6 degrees above horizon after sunrise. See https://www.home-assistant.io/docs/scripts/conditions/#sun-elevation-condition
+      description: Specify elevation to start charging relative to sunrise. Default is to start when sun is 6 degrees above horizon after sunrise. See https://www.home-assistant.io/docs/scripts/conditions/#sun-elevation-condition for details.
       default: 6
       selector:
         number:
@@ -124,7 +101,7 @@ blueprint:
 
     sunset_elevation_end_trigger:
       name: Sunset elevation end trigger
-      description: Specify elevation to stop charging relative to sunset. Default is to end when sun is 6 degrees above the horizon before sunset. See https://www.home-assistant.io/docs/scripts/conditions/#sun-elevation-condition
+      description: Specify elevation to stop charging relative to sunset. Default is to end when sun is 6 degrees above the horizon before sunset. See https://www.home-assistant.io/docs/scripts/conditions/#sun-elevation-condition for details.
       default: 6
       selector:
         number:
@@ -133,17 +110,25 @@ blueprint:
           unit_of_measurement: degree
           mode: box
 
+    # https://github.com/home-assistant/frontend/issues/12281
+    #toggle_charge_from_grid:
+    #  name: Charge from Grid Toggle
+    #  description: Toggle on to charge from grid and solar using day-time/night-time power offsets (Settings > Devices & Services > Helpers > Create helper > Toggle). Default is to charge from solar only.
+    #  default: false
+    #  selector:
+    #    boolean: {}
+
     toggle_charge_from_grid:
       name: Charge from grid toggle
-      description: Toggle on to charge from grid and solar using day time/night time power offsets (Settings > Devices & Services > Helpers > Create helper > Toggle). Default is to charge from solar only.
+      description: Toggle on to charge from grid and solar using day-time/night-time power offsets (Settings > Devices & Services > Helpers > Create helper > Toggle). Default is to charge from solar only.
       #default: input_boolean.telsa_model3_charge_from_grid
       selector:
         entity:
           domain: input_boolean
 
     daytime_power_offset:
-      name: Day time power offset
-      description: Specify negative power to charge car from grid, or positive power to export to grid. If charge from grid toggle is enabled, this power offset will be used after reaching sunrise elevation.
+      name: Day-time power offset
+      description: Specify negative power to charge car from grid, or positive power to export to grid. Need to toggle on charge from grid to use this offset when the sun reaches sunrise elevation start trigger.
       default: 0
       selector:
         number:
@@ -153,8 +138,8 @@ blueprint:
           mode: box
 
     nighttime_power_offset:
-      name: Night time power offset
-      description: Specify negative power to charge car from grid, or positive power to export to grid. If charge from grid toggle is enabled, this power offset will be used after reaching sunset elevation.
+      name: Night-time power offset
+      description: Specify negative power to charge car from grid, or positive power to export to grid. Need to toggle on charge from grid to use this offset when the sun reaches sunset elevation end trigger.
       default: 0
       selector:
         number:
@@ -163,6 +148,21 @@ blueprint:
           unit_of_measurement: watt
           mode: box
       
+    toggle_stop_charger:
+      name: Stop charger toggle
+      description: Toggle on to stop charger script (Settings > Devices & Services > Helpers > Create helper > Toggle). Delayed by "Wait grid power net update" value.
+      #default: input_boolean.tesla_model3_stop_charging
+      selector:
+        entity:
+          domain: input_boolean
+
+    #stop_charger_button:
+    #  name: Stop Charger Button
+    #  description: Create helper button to stop this script when pressed (Settings > Devices & Services > Helpers > Create helper > Button).
+    #  selector:
+    #    entity:
+    #      domain: input_button
+
     #####################################
     # Car daily charge limit
     #####################################
@@ -433,8 +433,6 @@ variables:
   #####################################
   # Inputs
   #####################################
-  #stop_charger_button_press: !input stop_charger_button
-  stop_charger: !input toggle_stop_charger
   car_charger_voltage: !input charger_voltage
   car_charger_max_current: !input charger_max_current
   car_charger_min_current: !input charger_min_current
@@ -443,6 +441,8 @@ variables:
   charge_from_grid: !input toggle_charge_from_grid
   daytime_power_offset: !input daytime_power_offset
   nighttime_power_offset: !input nighttime_power_offset
+  #stop_charger_button_press: !input stop_charger_button
+  stop_charger: !input toggle_stop_charger
 
   # Power = Voltage * Current
   # The power step in watts to increase or decrease with 1A current change.
@@ -528,6 +528,7 @@ trigger:
   #  event: sunrise
   #  offset: !input sunrise_offset_start_trigger
 
+  # Trigger action at elevation after sunrise.
   - trigger: numeric_state
     entity_id: sun.sun
     attribute: elevation
@@ -562,7 +563,7 @@ action:
       entity_id: !input car_button_forceupdate_ha
   - delay: "{{ wait_command_execute }}"
 
-  # Always set initial charge current
+  # Always set initial charge current here.  Otherwise if the charger is already on, it might not be set for sometime until there is a change.
   - service: number.set_value
     data:
       value: "{{ initial_charge_current }}"
@@ -728,9 +729,9 @@ action:
                 #  before: sunset
                 #  before_offset: !input sunset_offset_end_trigger
 
-                # Continue if sun is above start and end elevations.
+                # Continue if sun is above start or end elevations.
                 - condition: template
-                  value_template: "{{ (state_attr('sun.sun', 'elevation') > sunrise_elevation_start_trigger and is_state_attr('sun.sun', 'rising', true)) or (state_attr('sun.sun', 'elevation') > sunset_elevation_end_trigger and is_state_attr('sun.sun', 'rising', false)) }}"
+                  value_template: "{{ (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunrise_elevation_start_trigger) or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunset_elevation_end_trigger) }}"
 
       sequence:
 
@@ -745,13 +746,13 @@ action:
               {% if skew_default <= -1 %}
                 {{ skew_default }}
               {% elif states(homebattery_level) | float(90) < 90 %}
-                {{ -1.01 }}  
+                {{ -1.01 }}
               {% else %}
-                {{ skew_default }} 
+                {{ skew_default }}
               {% endif %}
 
             isDaytime: >-
-              {% if (state_attr('sun.sun', 'elevation') > sunrise_elevation_start_trigger and is_state_attr('sun.sun', 'rising', true)) or (state_attr('sun.sun', 'elevation') > sunset_elevation_end_trigger and is_state_attr('sun.sun', 'rising', false)) %}
+              {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunrise_elevation_start_trigger) or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunset_elevation_end_trigger) %}
                 {{ true }}
               {% else %}
                 {{ false }}
