@@ -110,25 +110,17 @@ blueprint:
           unit_of_measurement: degree
           mode: box
 
-    # https://github.com/home-assistant/frontend/issues/12281
-    #toggle_charge_from_grid:
-    #  name: Charge from Grid Toggle
-    #  description: Toggle on to charge from grid and solar using day-time/night-time power offsets (Settings > Devices & Services > Helpers > Create helper > Toggle). Default is to charge from solar only.
-    #  default: false
-    #  selector:
-    #    boolean: {}
-
     toggle_charge_from_grid:
       name: Charge from grid toggle
-      description: Toggle on to charge from grid and solar using day-time/night-time power offsets (Settings > Devices & Services > Helpers > Create helper > Toggle). Default is to charge from solar only.
+      description: Toggle on to charge from grid and solar using daytime or nighttime power offsets (Settings > Devices & Services > Helpers > Create helper > Toggle). Default is to charge from solar only.
       #default: input_boolean.telsa_model3_charge_from_grid
       selector:
         entity:
           domain: input_boolean
 
     daytime_power_offset:
-      name: Day-time power offset
-      description: Specify negative power to draw the amount from grid, or positive power to export the amount to grid. Need to toggle on charge from grid to use this power offset when the sun reaches sunrise elevation start trigger.
+      name: Daytime power offset
+      description: Specify the power to draw from or export to grid during daytime. Set negative value to draw from grid, or positive value to export to grid. Need to toggle on charge from grid to use this power offset when the sun reaches sunrise elevation start trigger.
       default: 0
       selector:
         number:
@@ -138,8 +130,8 @@ blueprint:
           mode: box
 
     nighttime_power_offset:
-      name: Night-time power offset
-      description: Specify negative power to draw the amount from grid, or positive power to export the amount to grid. Need to toggle on charge from grid to use this power offset when the sun reaches sunset elevation end trigger.
+      name: Nighttime power offset
+      description: Specify the power to draw from or export to grid during nighttime. Set negative value to draw from grid, or positive value to export to grid. Need to toggle on charge from grid to use this power offset when the sun reaches sunset elevation end trigger.
       default: 0
       selector:
         number:

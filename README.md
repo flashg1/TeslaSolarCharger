@@ -61,14 +61,13 @@ My setup
 Features
 ========
 
--	Charge from excess solar adjusting Tesla car charging current according to feedback loop value "Grid Power Net".  The "Grid Power Net" sensor expresses negative power in Watts when exporting to grid, and positive power when consuming from grid.
--   Support multi-day solar charging using sunrise trigger to start and sunset trigger to stop.
+-   Charge from excess solar adjusting Tesla car charging current according to feedback loop value "Grid Power Net".  The "Grid Power Net" sensor expresses negative power in Watts when exporting to grid, and positive power when consuming from grid.
+-   Support multi-day solar charging using sun elevation triggers to start and stop. (Sun elevation triggers should be more favourable for countries in the northern hemisphere.)
 -   Compatible with off-peak night time charging.
 -   Configurable daily car charge limit for 7 days.  Default is to use the Tesla app charge limit.
 -   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
 -   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
--   Use sun elevation to trigger script to start and end, which is more favourable for countries in the northern hemisphere.
--   Allow top up from grid if there is not enough solar electricity.  Need to toggle on charge from grid and set day-time/night-time power offsets to draw power from grid or export to grid.
+-   Allow top up from grid if there is not enough solar electricity.  Need to toggle on charge from grid and set daytime/nighttime power offsets to draw power from grid.
 
 
 How to use
@@ -88,7 +87,7 @@ To charge from excess solar, just plug in the charger.  The initial charge curre
 
 Option 2
 --------
-To charge from grid and solar, toggle on charge from grid and set day-time/night-time power offsets to draw power from grid or export to grid.
+To charge from grid and solar, toggle on charge from grid and set daytime/nighttime power offsets to draw power from grid.
 
 
 Notes
