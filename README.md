@@ -68,7 +68,7 @@ Features
 -   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
 -   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
 -   Use sun elevation to trigger script start and stop, which is more favourable for countries in the northern hemisphere.
--   Allow topup from grid if there is not enough solar electricity.  Need to turn on charge from grid toggle and specify day time/night time power offsets for charging or export to grid.
+-   Allow top up from grid if there is not enough solar electricity.  Need to turn on charge from grid toggle and specify day time/night time power offsets to reserve power for charging car or export to grid.
 
 
 How to use
