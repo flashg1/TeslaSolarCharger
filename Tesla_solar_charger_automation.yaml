@@ -42,14 +42,6 @@ blueprint:
     #  selector:
     #    boolean: {}
 
-    toggle_charge_from_grid:
-      name: Charge from grid toggle
-      description: Toggle on to charge from grid at specified current (Settings > Devices & Services > Helpers > Create helper > Toggle). The default is to charge from solar only.
-      #default: input_boolean.telsa_model3_charge_from_grid
-      selector:
-        entity:
-          domain: input_boolean
-
     toggle_stop_charger:
       name: Stop charger toggle
       description: Toggle on to stop charger script (Settings > Devices & Services > Helpers > Create helper > Toggle). Delayed by "Wait grid power net update" value.
@@ -109,16 +101,68 @@ blueprint:
           unit_of_measurement: second
           mode: box
 
-    sunrise_offset_start_trigger:
-      name: Sunrise offset start trigger
-      description: Specify time to start charging relative to sunrise, eg. set "+00:30:00" without quotes to start 30 minutes after sunrise.
-      default: "+00:30:00"
+    #sunrise_offset_start_trigger:
+    #  name: Sunrise offset start trigger
+    #  description: Specify time to start charging relative to sunrise, eg. set "+00:30:00" without quotes to start 30 minutes after sunrise.
+    #  default: "+00:30:00"
 
-    sunset_offset_end_trigger:
-      name: Sunset offset end trigger
-      description: Specify time to stop charging relative to sunset, eg. set "-00:30:00" without quotes to end 30 minutes before sunset.
-      default: "-00:30:00"
+    #sunset_offset_end_trigger:
+    #  name: Sunset offset end trigger
+    #  description: Specify time to stop charging relative to sunset, eg. set "-00:30:00" without quotes to end 30 minutes before sunset.
+    #  default: "-00:30:00"
 
+    sunrise_elevation_start_trigger:
+      name: Sunrise elevation start trigger
+      description: Specify elevation to start charging relative to sunrise. Default is to start when sun is 6 degrees above horizon after sunrise. See https://www.home-assistant.io/docs/scripts/conditions/#sun-elevation-condition
+      default: 6
+      selector:
+        number:
+          min: -90
+          max: +90
+          unit_of_measurement: degree
+          mode: box
+
+    sunset_elevation_end_trigger:
+      name: Sunset elevation end trigger
+      description: Specify elevation to stop charging relative to sunset. Default is to end when sun is 6 degrees above the horizon before sunset. See https://www.home-assistant.io/docs/scripts/conditions/#sun-elevation-condition
+      default: 6
+      selector:
+        number:
+          min: -90
+          max: +90
+          unit_of_measurement: degree
+          mode: box
+
+    toggle_charge_from_grid:
+      name: Charge from grid toggle
+      description: Toggle on to charge from grid and solar using day time/night time power offsets (Settings > Devices & Services > Helpers > Create helper > Toggle). Default is to charge from solar only.
+      #default: input_boolean.telsa_model3_charge_from_grid
+      selector:
+        entity:
+          domain: input_boolean
+
+    daytime_power_offset:
+      name: Day time power offset
+      description: Specify negative power to charge car from grid, or positive power to export to grid. If charge from grid toggle is enabled, this power offset will be used after reaching sunrise elevation.
+      default: 0
+      selector:
+        number:
+          min: -20000
+          max: +20000
+          unit_of_measurement: watt
+          mode: box
+
+    nighttime_power_offset:
+      name: Night time power offset
+      description: Specify negative power to charge car from grid, or positive power to export to grid. If charge from grid toggle is enabled, this power offset will be used after reaching sunset elevation.
+      default: 0
+      selector:
+        number:
+          min: -20000
+          max: +20000
+          unit_of_measurement: watt
+          mode: box
+      
     #####################################
     # Car daily charge limit
     #####################################
@@ -389,12 +433,16 @@ variables:
   #####################################
   # Inputs
   #####################################
-  charge_from_grid: !input toggle_charge_from_grid
   #stop_charger_button_press: !input stop_charger_button
   stop_charger: !input toggle_stop_charger
   car_charger_voltage: !input charger_voltage
   car_charger_max_current: !input charger_max_current
   car_charger_min_current: !input charger_min_current
+  sunrise_elevation_start_trigger: !input sunrise_elevation_start_trigger
+  sunset_elevation_end_trigger: !input sunset_elevation_end_trigger
+  charge_from_grid: !input toggle_charge_from_grid
+  daytime_power_offset: !input daytime_power_offset
+  nighttime_power_offset: !input nighttime_power_offset
 
   # Power = Voltage * Current
   # The power step in watts to increase or decrease with 1A current change.
@@ -476,9 +524,14 @@ trigger:
   #  to: "on"
 
   # Trigger action after sunrise offset.
-  - platform: sun
-    event: sunrise
-    offset: !input sunrise_offset_start_trigger
+  #- platform: sun
+  #  event: sunrise
+  #  offset: !input sunrise_offset_start_trigger
+
+  - trigger: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    above: !input sunrise_elevation_start_trigger
 
 condition:
 
@@ -662,10 +715,14 @@ action:
                   value_template: "{{ is_state(charge_from_grid, 'on') }}"
 
                 # Continue if within daylight hours.
-                - condition: sun
-                  after: sunrise
-                  before: sunset
-                  before_offset: !input sunset_offset_end_trigger
+                #- condition: sun
+                #  after: sunrise
+                #  before: sunset
+                #  before_offset: !input sunset_offset_end_trigger
+
+                # Continue if sun is above start and end elevations.
+                - condition: template
+                  value_template: "{{ (state_attr('sun.sun', 'elevation') > sunrise_elevation_start_trigger and is_state_attr('sun.sun', 'rising', true)) or (state_attr('sun.sun', 'elevation') > sunset_elevation_end_trigger and is_state_attr('sun.sun', 'rising', false)) }}"
 
       sequence:
 
@@ -685,6 +742,25 @@ action:
                 {{ skew_default }} 
               {% endif %}
 
+            isDaytime: >-
+              {% if (state_attr('sun.sun', 'elevation') > sunrise_elevation_start_trigger and is_state_attr('sun.sun', 'rising', true)) or (state_attr('sun.sun', 'elevation') > sunset_elevation_end_trigger and is_state_attr('sun.sun', 'rising', false)) %}
+                {{ true }}
+              {% else %}
+                {{ false }}
+              {% endif %}
+
+            # -ve to use from grid, +ve to export to grid.
+            powerOffset: >-
+              {% if is_state(charge_from_grid, 'on') %}
+                {% if isDaytime %}
+                  {{ daytime_power_offset }}
+                {% else %}
+                  {{ nighttime_power_offset }}
+                {% endif %}
+              {% else %}
+                {{ 0 }}
+              {% endif %}
+
         - variables:
 
             # Net power from all sources (default 0 set by float(0) if cannot convert to float).
@@ -692,7 +768,7 @@ action:
               {% if states(homebattery_power_net) | float(0) > 0 %}
                 {{ states(grid_power_net) | float(0) + states(homebattery_power_net) | float(0) + (1 + skew_default) * one_amp_watt_step }}  
               {% else %}
-                {{ states(grid_power_net) | float(0) }} 
+                {{ states(grid_power_net) | float(0) + powerOffset }} 
               {% endif %}
 
             # This can be greater than car_charger_max_current.
@@ -803,11 +879,11 @@ action:
                 #response_variable: "stop_charging_reason"
 
           # Toggled to charge from grid at current specified in app.
-          - conditions:
-              - condition: template
-                value_template: "{{ is_state(charge_from_grid, 'on') }}"
-            sequence:
-              - delay: "00:00:00"
+          #- conditions:
+          #    - condition: template
+          #      value_template: "{{ is_state(charge_from_grid, 'on') }}"
+          #  sequence:
+          #    - delay: "00:00:00"
 
           # all_power_net < -69W, ie. need to increase charger current.
           - conditions:
