@@ -128,7 +128,7 @@ blueprint:
 
     daytime_power_offset:
       name: Day-time power offset
-      description: Specify negative power to draw the amount from grid, or positive power to export the amount to grid. Need to toggle on charge from grid to use this offset when the sun reaches sunrise elevation start trigger.
+      description: Specify negative power to draw the amount from grid, or positive power to export the amount to grid. Need to toggle on charge from grid to use this power offset when the sun reaches sunrise elevation start trigger.
       default: 0
       selector:
         number:
@@ -139,7 +139,7 @@ blueprint:
 
     nighttime_power_offset:
       name: Night-time power offset
-      description: Specify negative power to draw the amount from grid, or positive power to export the amount to grid. Need to toggle on charge from grid to use this offset when the sun reaches sunset elevation end trigger.
+      description: Specify negative power to draw the amount from grid, or positive power to export the amount to grid. Need to toggle on charge from grid to use this power offset when the sun reaches sunset elevation end trigger.
       default: 0
       selector:
         number:
