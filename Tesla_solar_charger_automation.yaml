@@ -562,6 +562,14 @@ action:
       entity_id: !input car_button_forceupdate_ha
   - delay: "{{ wait_command_execute }}"
 
+  # Always set initial charge current
+  - service: number.set_value
+    data:
+      value: "{{ initial_charge_current }}"
+    target:
+      entity_id: !input car_number_charging_amps
+  - delay: "{{ wait_command_execute }}"
+
   # Save current Tesla parameters for later restore.
   # Restoring charge limit to a higher value at script end will trigger Tesla to charge to the higher value. So don't save car_number_charge_limit in scene.
   # Cannot restore car_number_charging_amps reliably, possibly due to script crash or car not available.
@@ -815,37 +823,17 @@ action:
               - condition: template
                 value_template: "{{ repeat.index == 1 }}"
             sequence:
-
-              - choose:
-                - conditions:
-                    - condition: state
-                      entity_id: !input car_binary_sensor_charging
-                      state: "off"
-                  sequence:
-                    # Only set initial current if charging from solar, otherwise charge from grid using current set by user enforcing current limits.
-                    - if:
-                        - condition: template
-                          value_template: "{{ is_state(charge_from_grid, 'off') }}"
-                      then:
-                        - service: number.set_value
-                          data:
-                            value: "{{ initial_charge_current }}"
-                          target:
-                            entity_id: !input car_number_charging_amps
-                      else:
-                        - service: number.set_value
-                          data:
-                            value: "{{ charge_current }}"
-                          target:
-                            entity_id: !input car_number_charging_amps
-                    - delay: "{{ wait_command_execute }}"
-
-                    # Turn on charger. Rate of current increase is handled by Tesla car.
-                    - service: switch.turn_on
-                      data: {}
-                      target:
-                        entity_id: !input car_switch_charger
-                    - delay: "{{ wait_charger_on }}"
+              # Turn on charger if off. Rate of current increase is handled by Tesla car.
+              - if:
+                - condition: state
+                  entity_id: !input car_binary_sensor_charging
+                  state: "off"
+                then:
+                  - service: switch.turn_on
+                    data: {}
+                    target:
+                      entity_id: !input car_switch_charger
+                  - delay: "{{ wait_charger_on }}"
           
           # Exit script if charger is turned off, ie. not charging.
           - conditions:
