@@ -88,7 +88,7 @@ To charge from excess solar, just plug in the charger.  The initial charge curre
 
 Option 2
 --------
-To charge from grid, set your desired charging current and turn on "Telsa Model3 charge from grid".
+To charge from grid, toggle on charge from grid and set day-time/night-time power offsets to reserve power for charging car or export to grid.
 
 
 Notes
