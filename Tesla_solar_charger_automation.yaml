@@ -556,6 +556,7 @@ action:
   - delay: "{{ wait_command_execute }}"
 
   # Always set initial charge current here.  Otherwise if the charger is already on, it might not be set for sometime until there is a change.
+  # The set current API will only be called if the old and new current values are different. Confirmed in log.
   - service: number.set_value
     data:
       value: "{{ initial_charge_current }}"
