@@ -93,6 +93,8 @@ To charge from grid and solar, toggle on charge from grid and set daytime/nightt
 Notes
 =====
 
+Please also check out the [wiki](https://github.com/flashg1/TeslaSolarCharger/wiki) pages.
+
 Automation cannot be triggered
 ------------------------------
 The Tesla triggers and conditions are slow to update unless car is polled often.  Polling too often can drain the car battery.  So might have to wait a minute or two for the conditions to refresh and the triggers to work.  Please see below for possible work-arounds.
