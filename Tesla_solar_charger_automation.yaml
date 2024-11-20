@@ -660,7 +660,7 @@ action:
             entity_id: !input car_number_charge_limit
         - delay: "{{ wait_charge_limit }}"
 
-        # Setting the charge limit might cause car to turn on charger, so must get latest update before proceeding. Otherwise script can exit without turning off charger.
+        # Car charger is turned on if setting higher charge limit, so must get latest update before proceeding. Otherwise script can exit without turning off charger.
         - service: button.press
           data: {}
           target:
