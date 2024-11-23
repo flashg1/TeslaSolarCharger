@@ -1,6 +1,9 @@
 Tesla Solar Charger
 ===================
 
+v2.0a   20/11/2024
+-   Updated doc.
+
 v2.0    14/11/2024
 -   Use sun elevation triggers instead of sunrise/sunset time offsets to start and stop script.
 -   Allow top up from grid if there is not enough solar electricity.
