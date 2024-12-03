@@ -3,6 +3,7 @@ Tesla Solar Charger
 
 v2.0a   20/11/2024
 -   Updated doc.
+-   Took "turn charger on" out of choose condition to speed up current change on startup.
 
 v2.0    14/11/2024
 -   Use sun elevation triggers instead of sunrise/sunset time offsets to start and stop script.

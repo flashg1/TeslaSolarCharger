@@ -810,25 +810,25 @@ action:
             #    {{ propose_charge_current }}              
             #  {% endif %}
 
+        - if:
+            # First time run, turn on charger if not turned on already.
+            - condition: template
+              value_template: "{{ repeat.index == 1 }}"
+          then:
+            # Turn on charger if off. Rate of current increase is handled by Tesla car.
+            - if:
+              - condition: state
+                entity_id: !input car_binary_sensor_charging
+                state: "off"
+              then:
+                - service: switch.turn_on
+                  data: {}
+                  target:
+                    entity_id: !input car_switch_charger
+                - delay: "{{ wait_charger_on }}"
+
         - choose:
 
-          # First time run, turn on charger if not turned on already.
-          - conditions:
-              - condition: template
-                value_template: "{{ repeat.index == 1 }}"
-            sequence:
-              # Turn on charger if off. Rate of current increase is handled by Tesla car.
-              - if:
-                - condition: state
-                  entity_id: !input car_binary_sensor_charging
-                  state: "off"
-                then:
-                  - service: switch.turn_on
-                    data: {}
-                    target:
-                      entity_id: !input car_switch_charger
-                  - delay: "{{ wait_charger_on }}"
-          
           # Exit script if charger is turned off, ie. not charging.
           - conditions:
               - condition: state
