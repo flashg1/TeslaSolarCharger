@@ -1,6 +1,10 @@
 Tesla Solar Charger
 ===================
 
+v2.0b   8/12/2024
+-   Tidied up code syntax.
+-   More diagnostic info during tracing by using "alias" command.
+
 v2.0a   20/11/2024
 -   Updated doc.
 -   Took "turn charger on" out of choose condition to speed up current change on startup.
