@@ -16,7 +16,7 @@ blueprint:
 
   name: Tesla solar charger automation
   description: >
-    Charge Tesla car using surplus solar electricity and weather forecast (v2.0b).
+    Charge Tesla car using surplus solar electricity and weather forecast (v2.0c).
     See https://github.com/flashg1/TeslaSolarCharger for details.
   domain: automation
 
@@ -185,79 +185,88 @@ blueprint:
     #####################################
     # Car daily charge limit
     #####################################
+    use_daily_car_charge_limit_config:
+      name: Use daily charge limit config
+      description: >
+        Use car charge limit configured for the day.
+        The default is to use the charge limit from the Tesla app.
+      default: false
+      selector:
+        boolean:
+
     car_charge_limit_monday:
       name: Monday
-      description: Car charge limit for day (Valid range = 50 to 100, Use Tesla app charge limit = 49).
-      default: 49
+      description: "Car charge limit for day (Valid range: 50 - 100)."
+      default: 70
       selector:
         number:
-          min: 49
+          min: 50
           max: 100
           unit_of_measurement: percent
           mode: slider
 
     car_charge_limit_tuesday:
       name: Tuesday
-      description: Car charge limit for day (Valid range = 50 to 100, Use Tesla app charge limit = 49).
-      default: 49
+      description: "Car charge limit for day (Valid range: 50 - 100)."
+      default: 70
       selector:
         number:
-          min: 49
+          min: 50
           max: 100
           unit_of_measurement: percent
           mode: slider
 
     car_charge_limit_wednesday:
       name: Wednesday
-      description: Car charge limit for day (Valid range = 50 to 100, Use Tesla app charge limit = 49).
-      default: 49
+      description: "Car charge limit for day (Valid range: 50 - 100)."
+      default: 70
       selector:
         number:
-          min: 49
+          min: 50
           max: 100
           unit_of_measurement: percent
           mode: slider
 
     car_charge_limit_thursday:
       name: Thursday
-      description: Car charge limit for day (Valid range = 50 to 100, Use Tesla app charge limit = 49).
-      default: 49
+      description: "Car charge limit for day (Valid range: 50 - 100)."
+      default: 70
       selector:
         number:
-          min: 49
+          min: 50
           max: 100
           unit_of_measurement: percent
           mode: slider
 
     car_charge_limit_friday:
       name: Friday
-      description: Car charge limit for day (Valid range = 50 to 100, Use Tesla app charge limit = 49).
-      default: 49
+      description: "Car charge limit for day (Valid range: 50 - 100)."
+      default: 80
       selector:
         number:
-          min: 49
+          min: 50
           max: 100
           unit_of_measurement: percent
           mode: slider
 
     car_charge_limit_saturday:
       name: Saturday
-      description: Car charge limit for day (Valid range = 50 to 100, Use Tesla app charge limit = 49).
-      default: 49
+      description: "Car charge limit for day (Valid range: 50 - 100)."
+      default: 80
       selector:
         number:
-          min: 49
+          min: 50
           max: 100
           unit_of_measurement: percent
           mode: slider
 
     car_charge_limit_sunday:
       name: Sunday
-      description: Car charge limit for day (Valid range = 50 to 100, Use Tesla app charge limit = 49).
-      default: 49
+      description: "Car charge limit for day (Valid range: 50 - 100)."
+      default: 80
       selector:
         number:
-          min: 49
+          min: 50
           max: 100
           unit_of_measurement: percent
           mode: slider
@@ -269,7 +278,7 @@ blueprint:
       name: Adjust daily car charge limit based on weather
       description: >
         Automatically adjust to the highest charge limit set within a rainy forecast period.
-        Charge limit and weather provider settings must be configured.
+        Daily charge limit and weather provider settings must be configured.
       default: false
       selector:
         boolean:
@@ -496,6 +505,8 @@ variables:
   #####################################
   # Set car charge limit based on which week day
   #####################################
+  useDailyCarChargeLimitConfig: !input use_daily_car_charge_limit_config
+
   mon: !input car_charge_limit_monday
   tue: !input car_charge_limit_tuesday
   wed: !input car_charge_limit_wednesday
@@ -507,7 +518,6 @@ variables:
   # Store as integer list
   car_charge_limit_list: "{{ [mon, tue, wed, thu, fri, sat, sun] }}"
   todayIndex: "{{ now().weekday() }}"
-  todayCarChargeLimit: "{{ car_charge_limit_list[todayIndex] }}"
 
   #####################################
   # Set car charge limit based on weather forecast
@@ -520,15 +530,6 @@ variables:
 
   # Not all intervals are available for all providers. Possible values: "hourly", "twice_daily", "daily"
   forecast_interval: "daily"
-  # Charge limit list for the next N days excluding today. Also take into account carChargeLimitOnBadWeather.
-  badWeatherPeriodChargeLimitList: >
-    {% set data = namespace(numbers=[carChargeLimitOnBadWeather]) %}
-    {% for i in range(1, forecast_index + 1, 1) %}
-      {% set day = (todayIndex + i) % 7 %}
-      {% set data.numbers = data.numbers + [car_charge_limit_list[day]] %}
-    {% endfor %}
-    {{ data.numbers }}
-  badWeatherPeriodMaxChargeLimit: "{{ badWeatherPeriodChargeLimitList | max }}"
 
 ###############################################################################
 # Triggers
@@ -629,11 +630,9 @@ action:
     #    {{ todayCarChargeLimit >= car_charge_limit_min and todayCarChargeLimit <= car_charge_limit_max }}
 
     - conditions:
-        - alias: "If today charge limit is set in config"
+        - alias: "If use daily car charge limit config"
           condition: template
-          value_template: >
-            {{ todayCarChargeLimit >= car_charge_limit_min
-            and todayCarChargeLimit <= car_charge_limit_max }}
+          value_template: "{{ useDailyCarChargeLimitConfig }}"
 
       # Then set charge limit base on config
       sequence:
@@ -667,6 +666,20 @@ action:
               {% else %}
                 {{ "weather forecast disabled" }}
               {% endif %}
+
+            # Charge limit list for the next N days excluding today. Also take into account carChargeLimitOnBadWeather.
+            badWeatherPeriodChargeLimitList: >
+              {% set data = namespace(numbers=[carChargeLimitOnBadWeather]) %}
+              {% for i in range(1, forecast_index + 1, 1) %}
+                {% set day = (todayIndex + i) % 7 %}
+                {% set data.numbers = data.numbers + [car_charge_limit_list[day]] %}
+              {% endfor %}
+              {{ data.numbers }}
+
+            badWeatherPeriodMaxChargeLimit: "{{ badWeatherPeriodChargeLimitList | max }}"
+
+            #teslaAppChargeLimit: !input car_number_charge_limit
+            todayCarChargeLimit: "{{ car_charge_limit_list[todayIndex] }}"
 
             # See https://www.home-assistant.io/integrations/weather/
             # Some possible values: rainy, cloudy, partlycloudy
@@ -820,8 +833,6 @@ action:
               {% else %}
                 {{ 0 }}
               {% endif %}
-
-        - variables:
 
             # Net power from all sources (default 0 set by float(0) if cannot convert to float).
             all_power_net: >
