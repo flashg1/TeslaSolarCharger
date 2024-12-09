@@ -798,6 +798,25 @@ action:
 
       sequence:
 
+        # Switch on charger before calculating power usage. Accuracy depends on rate of grid_power_net update.
+        - if:
+            - alias: "If looping for the first time in while loop"
+              condition: template
+              value_template: "{{ repeat.index == 1 }}"
+          then:
+            - alias: "Then turn on charger if not already on"
+              if:
+                - condition: state
+                  entity_id: !input car_binary_sensor_charging
+                  state: "off"
+              then:
+                # Turn on charger for the first time. Rate of current increase is handled by Tesla car.
+                - service: switch.turn_on
+                  data: {}
+                  target:
+                    entity_id: !input car_switch_charger
+                - delay: "{{ wait_charger_on }}"
+
         - variables:
             # For Enphase, grid_power_net is an integer in watts. Positive value means importing power from grid. Negative value means exporting power to grid.
             # For other inverter brands, adjust the formula to conform with above requirement according to your setup.
@@ -878,24 +897,6 @@ action:
             #  {% else %}
             #    {{ propose_charge_current }}              
             #  {% endif %}
-
-        - if:
-            - alias: "If looping for the first time in while loop"
-              condition: template
-              value_template: "{{ repeat.index == 1 }}"
-          then:
-            - alias: "Then turn on charger if not already on"
-              if:
-                - condition: state
-                  entity_id: !input car_binary_sensor_charging
-                  state: "off"
-              then:
-                # Turn on charger for the first time. Rate of current increase is handled by Tesla car.
-                - service: switch.turn_on
-                  data: {}
-                  target:
-                    entity_id: !input car_switch_charger
-                - delay: "{{ wait_charger_on }}"
 
         - choose:
 
