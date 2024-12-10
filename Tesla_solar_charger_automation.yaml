@@ -185,18 +185,18 @@ blueprint:
     #####################################
     # Car daily charge limit
     #####################################
-    use_daily_car_charge_limit_config:
-      name: Use daily charge limit config
+    toggle_set_daily_car_charge_limit:
+      name: Set daily car charge limit toggle
       description: >
-        Use car charge limit configured for the day.
-        The default is to use the charge limit from the Tesla app.
-      default: false
+        Set car charge limit configured for the day once on start up (Settings > Devices & Services > Helpers > Create helper > Toggle).
+        The default is not to set the charge limit on start up and just use existing charge limit from Tesla app.
       selector:
-        boolean:
+        entity:
+          domain: input_boolean
 
     car_charge_limit_monday:
       name: Monday
-      description: "Car charge limit for day (Valid range: 50 - 100)."
+      description: "Car charge limit for day (valid range: 50 - 100)."
       default: 70
       selector:
         number:
@@ -207,7 +207,7 @@ blueprint:
 
     car_charge_limit_tuesday:
       name: Tuesday
-      description: "Car charge limit for day (Valid range: 50 - 100)."
+      description: "Car charge limit for day (valid range: 50 - 100)."
       default: 70
       selector:
         number:
@@ -218,7 +218,7 @@ blueprint:
 
     car_charge_limit_wednesday:
       name: Wednesday
-      description: "Car charge limit for day (Valid range: 50 - 100)."
+      description: "Car charge limit for day (valid range: 50 - 100)."
       default: 70
       selector:
         number:
@@ -229,7 +229,7 @@ blueprint:
 
     car_charge_limit_thursday:
       name: Thursday
-      description: "Car charge limit for day (Valid range: 50 - 100)."
+      description: "Car charge limit for day (valid range: 50 - 100)."
       default: 70
       selector:
         number:
@@ -240,7 +240,7 @@ blueprint:
 
     car_charge_limit_friday:
       name: Friday
-      description: "Car charge limit for day (Valid range: 50 - 100)."
+      description: "Car charge limit for day (valid range: 50 - 100)."
       default: 80
       selector:
         number:
@@ -251,7 +251,7 @@ blueprint:
 
     car_charge_limit_saturday:
       name: Saturday
-      description: "Car charge limit for day (Valid range: 50 - 100)."
+      description: "Car charge limit for day (valid range: 50 - 100)."
       default: 80
       selector:
         number:
@@ -262,7 +262,7 @@ blueprint:
 
     car_charge_limit_sunday:
       name: Sunday
-      description: "Car charge limit for day (Valid range: 50 - 100)."
+      description: "Car charge limit for day (valid range: 50 - 100)."
       default: 80
       selector:
         number:
@@ -278,7 +278,7 @@ blueprint:
       name: Adjust daily car charge limit based on weather
       description: >
         Automatically adjust to the highest charge limit set within a rainy forecast period.
-        Daily charge limit and weather provider settings must be configured.
+        Daily car charge limit and weather provider settings must be configured.
       default: false
       selector:
         boolean:
@@ -314,7 +314,7 @@ blueprint:
     car_charge_limit_on_bad_weather:
       name: Car charge limit on bad weather forecast
       description: >
-        Charge limit to set on bad weather forecast.
+        Car charge limit to set on bad weather forecast (valid range: 50 - 100).
         This will be used unless there is a higher setting within the forecast period.
       default: 80
       selector:
@@ -505,7 +505,7 @@ variables:
   #####################################
   # Set car charge limit based on which week day
   #####################################
-  useDailyCarChargeLimitConfig: !input use_daily_car_charge_limit_config
+  setDailyCarChargeLimit: !input toggle_set_daily_car_charge_limit
 
   mon: !input car_charge_limit_monday
   tue: !input car_charge_limit_tuesday
@@ -617,12 +617,18 @@ action:
   #      - !input car_number_charge_limit
   #- delay: "{{ wait_command_execute }}"
 
-  # Set car charge limit.
-  # Should honour existing charge limit set by app or car, unless charge limit for day is set.
-  # If charge limit for day is not set, ie. set to 49, charge limit will be set according to the Tesla app.
-  # If charge limit for day is set and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.
-  # If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.
-  # If charge car based on weather is enabled, daily charge limit and weather provider settings must be configured.
+  #####################################
+  # Set car charge limit on start up
+  #####################################
+  # Should honour existing charge limit set by app or car, unless set daily car charge limit is toggled on.
+  #
+  # If set daily car charge limit is toggled off, charge limit will be set according to the Tesla app.
+  # If set daily car charge limit is toggled on and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.
+  # If set daily car charge limit is toggled on and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.
+  #
+  # If charge car based on weather is enabled, daily car charge limit and weather provider settings must be configured.
+  # If set daily car charge limit is toggled on and if necessary, user can manually override the charge limit setting within 30 seconds after it has been set by this automation.
+
   - choose:
 
     # Note the following syntax caused variables not to be highlighted in HA trace "Step Config" tab.
@@ -630,9 +636,9 @@ action:
     #    {{ todayCarChargeLimit >= car_charge_limit_min and todayCarChargeLimit <= car_charge_limit_max }}
 
     - conditions:
-        - alias: "If use daily car charge limit config"
+        - alias: "If set daily car charge limit on start up"
           condition: template
-          value_template: "{{ useDailyCarChargeLimitConfig }}"
+          value_template: "{{ is_state(setDailyCarChargeLimit, 'on') }}"
 
       # Then set charge limit base on config
       sequence:

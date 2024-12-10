@@ -39,10 +39,11 @@ template:
 
 -	Restart HA.
 
--	Create 2 helper booleans, eg.
+-	Create 3 helper booleans, eg.
 Settings > Devices & Services > Helpers > Create Helper > Toggle
-1.	Telsa Model3 charge from grid
-2.	Tesla Model3 stop charging
+1.	Tesla Model3 set daily car charge limit
+2.	Telsa Model3 charge from grid
+3.	Tesla Model3 stop charging
 
 -	Config the Blueprint automation specifying charger voltage, maximum current and helper booleans created above, ie.
 Settings > Automations & Scenes > Blueprints > Tesla solar charger automation
@@ -106,10 +107,10 @@ Work-arounds:
 
 Daily car charge limit settings
 -------------------------------
-- If charge limit for day is not set, ie. set to 49, charge limit will be set according to the Tesla app.
-- If charge limit for day is set and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.  If necessary, user can manually override the charge limit setting within 30 seconds after it has been set by this automation.
-- If charge limit for day is set and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.  If necessary, user can manually override the charge limit setting within 30 seconds after it has been set by this automation.
-- If charge car based on weather is enabled, daily charge limit and weather provider settings must be configured.
+- If set daily car charge limit is toggled off, charge limit will be set according to the Tesla app.
+- If set daily car charge limit is toggled on and charge car based on weather is disabled, charge limit will be set according to the limit configured for the day.  If necessary, user can manually override the charge limit setting within 30 seconds after it has been set by this automation.
+- If set daily car charge limit is toggled on and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.  If necessary, user can manually override the charge limit setting within 30 seconds after it has been set by this automation.
+- If charge car based on weather is enabled, daily car charge limit and weather provider settings must be configured.
 
 
 GUI display examples
@@ -136,6 +137,7 @@ appliance1_extra_entity: sensor.battery
 # optional 3 main bubble icons for clickable entities
 grid_entity: sensor.grid_power_net
 house_entity: sensor.envoy_[YourEnvoyId]_current_power_consumption
+# Watch this for car charge limit change
 house_extra_entity: number.charge_limit
 generation_entity: sensor.solar_power_production
 
