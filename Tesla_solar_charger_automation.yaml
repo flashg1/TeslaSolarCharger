@@ -16,7 +16,7 @@ blueprint:
 
   name: Tesla solar charger automation
   description: >
-    Charge Tesla car using surplus solar electricity and weather forecast (v2.0c).
+    Charge Tesla car using surplus solar electricity and weather forecast (v2.1).
     See https://github.com/flashg1/TeslaSolarCharger for details.
   domain: automation
 
