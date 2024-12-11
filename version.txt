@@ -2,7 +2,7 @@ Tesla Solar Charger
 ===================
 
 v2.1   9/12/2024
--   Breaking change: Need to add input boolean to enable or disable use of daily car charge limit config.
+-   Breaking change: Need to create new input boolean to enable or disable use of daily car charge limit config. Sometimes it is easier to just use the Tesla app charge limit.
 
 v2.0b   8/12/2024
 -   Tidied up code syntax.
