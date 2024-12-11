@@ -815,6 +815,13 @@ action:
                     entity_id: !input car_switch_charger
                 - delay: "{{ wait_charger_on }}"
 
+                # Sometimes the charging status is not updated after turning on charger causing script to exit in while loop. Best to get status now.
+                - service: button.press
+                  data: {}
+                  target:
+                    entity_id: !input car_button_forceupdate_ha
+                - delay: "{{ wait_command_execute }}"
+
         - variables:
             # For Enphase, grid_power_net is an integer in watts. Positive value means importing power from grid. Negative value means exporting power to grid.
             # For other inverter brands, adjust the formula to conform with above requirement according to your setup.
