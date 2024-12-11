@@ -16,7 +16,7 @@ blueprint:
 
   name: Tesla solar charger automation
   description: >
-    Charge Tesla car using surplus solar electricity and weather forecast (v2.1).
+    Charge Tesla car using surplus solar electricity and weather forecast (v2.1a).
     See https://github.com/flashg1/TeslaSolarCharger for details.
   domain: automation
 
@@ -490,15 +490,12 @@ variables:
   # The power step in watts to increase or decrease with 1A current change.
   one_amp_watt_step: "{{ car_charger_voltage * 1 }}"
 
-  # This worked ok.
-  #tesla_model3_charge_level: "sensor.battery"
-  #tesla_model3_charge_level: !input car_sensor_battery
-  car_chargelimit_ent: !input car_number_charge_limit
-  car_chargelimit_last: "{{ expand(car_chargelimit_ent)[0].last_changed | as_timestamp }}"
-  car_chargelimit_val: "{{ expand(car_chargelimit_ent)[0].state }}"
-  car_batterylevel_ent: !input car_sensor_battery
-  car_batterylevel_last: "{{ expand(car_batterylevel_ent)[0].last_changed | as_timestamp }}"
-  car_batterylevel_val: "{{ expand(car_batterylevel_ent)[0].state }}"
+  carChargeLimit: !input car_number_charge_limit
+  #car_chargelimit_last: "{{ expand(carChargeLimit)[0].last_changed | as_timestamp }}"
+  #car_chargelimit_val: "{{ expand(carChargeLimit)[0].state }}"
+  carBatteryLevel: !input car_sensor_battery
+  #car_batterylevel_last: "{{ expand(carBatteryLevel)[0].last_changed | as_timestamp }}"
+  #car_batterylevel_val: "{{ expand(carBatteryLevel)[0].state }}"
 
   car_charging_amps: !input car_number_charging_amps
 
@@ -768,17 +765,12 @@ action:
               entity_id: !input car_binary_sensor_charger_pluggedin
               state: "on"
 
-            # Continue if battery is more than 1% below charge limit.
             # https://community.home-assistant.io/t/configuring-variables-into-templates-in-a-blueprint/323811/2
-            # OK to charge 1% less because Tesla can stop charging at 1% less by itself.
-            #- condition: template
-            #  value_template: "{{ (expand(car_batterylevel_ent)[0].state | int + 1) < (expand(car_chargelimit_ent)[0].state | int) }}"
-
-            # https://community.home-assistant.io/t/configuring-variables-into-templates-in-a-blueprint/323811/2
+            # {{ (expand(carBatteryLevel)[0].state | int) < (expand(carChargeLimit)[0].state | int) }}
             - alias: "Continue if battery is below charge limit"
               condition: template
               value_template: >
-                {{ (expand(car_batterylevel_ent)[0].state | int) < (expand(car_chargelimit_ent)[0].state | int) }}
+                {{ (states(carBatteryLevel) | int) < (states(carChargeLimit) | int) }}
 
             - condition: or
               conditions:
