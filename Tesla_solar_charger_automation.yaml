@@ -16,13 +16,13 @@ blueprint:
 
   name: Tesla solar charger automation
   description: >
-    Charge Tesla car using surplus solar electricity and weather forecast (v2.1a).
+    Charge Tesla car using surplus solar electricity and weather forecast (v2.1b).
     See https://github.com/flashg1/TeslaSolarCharger for details.
   domain: automation
 
-###############################################################################
-# Blueprint inputs
-###############################################################################
+  #####################################
+  # Blueprint inputs
+  #####################################
   input:
 
     #####################################
@@ -427,6 +427,11 @@ blueprint:
           domain: button
 
 ###############################################################################
+# Only one Blueprint can run at any one time
+###############################################################################
+mode: single
+
+###############################################################################
 # Global variables
 # https://community.home-assistant.io/t/why-the-heck-dont-we-have-global-variables/219671/86
 # https://github.com/rogro82/hass-variables
@@ -498,6 +503,7 @@ variables:
   #car_batterylevel_val: "{{ expand(carBatteryLevel)[0].state }}"
 
   car_charging_amps: !input car_number_charging_amps
+  carLocationTracker: !input car_location_tracker
 
   #####################################
   # Set car charge limit based on which week day
@@ -533,7 +539,7 @@ variables:
 # Note:
 # - Tesla triggers do not update often due to infrequent polling.
 ###############################################################################
-trigger:
+triggers:
   #- platform: numeric_state
   #  entity_id: !input sensor_grid_power_net
   #  below: 300
@@ -565,7 +571,7 @@ trigger:
     attribute: elevation
     above: !input sunrise_elevation_start_trigger
 
-condition:
+conditions:
 
   - condition: state
     entity_id: !input car_location_tracker
@@ -578,7 +584,7 @@ condition:
 ###############################################################################
 # Action
 ###############################################################################
-action:
+actions:
 
   # Wake up Tesla.
   - service: button.press
@@ -593,6 +599,13 @@ action:
     target:
       entity_id: !input car_button_forceupdate_ha
   - delay: "{{ wait_command_execute }}"
+
+  # Do not manually run this script if car is not at home, because it affects car charging anywhere.
+  - if:
+      - condition: template
+        value_template: "{{ states(carLocationTracker) != 'home' }}"
+    then:
+      - stop: "Exiting script because car is not at home. Manually running this script affects car charging anywhere."
 
   # Always set initial charge current here.  Otherwise if the charger is already on, it might not be set for sometime until there is a change.
   # The new charge current value will only be set if the old and new values are different. Confirmed in log.
@@ -1031,5 +1044,3 @@ action:
     target:
       entity_id: !input car_button_forceupdate_ha
   - delay: "{{ wait_command_execute }}"
-
-mode: single
