@@ -1,6 +1,9 @@
 Tesla Solar Charger
 ===================
 
+v2.1c   16/12/2024
+-   Removed 30 seconds delay for overriding charge limit. To override charge limit, set charge limit from Tesla app and toggle off setting daily charge limit.
+
 v2.1b   14/12/2024
 -   Do not manually run this script if car is not at home, because it affects car charging anywhere.
 -   Tidied syntax.

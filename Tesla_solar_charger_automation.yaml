@@ -16,7 +16,7 @@ blueprint:
 
   name: Tesla solar charger automation
   description: >
-    Charge Tesla car using surplus solar electricity and weather forecast (v2.1b).
+    Charge Tesla car using surplus solar electricity and weather forecast (v2.1c).
     See https://github.com/flashg1/TeslaSolarCharger for details.
   domain: automation
 
@@ -459,8 +459,8 @@ variables:
   #wait_current_change: "00:00:0.3"
   wait_current_change: 0.3
 
-  # Wait in seconds after setting car charge limit to allow user override when not using Tesla app charge limit.
-  wait_charge_limit: 30
+  # Wait in seconds after setting car charge limit.
+  wait_charge_limit: 5
   
   # Time to wait in seconds for command to execute after sending command.
   wait_command_execute: 5
@@ -600,12 +600,13 @@ actions:
       entity_id: !input car_button_forceupdate_ha
   - delay: "{{ wait_command_execute }}"
 
+  # Sanity check in case of manual run.
   # Do not manually run this script if car is not at home, because it affects car charging anywhere.
   - if:
       - condition: template
         value_template: "{{ states(carLocationTracker) != 'home' }}"
     then:
-      - stop: "Exiting script because car is not at home. Manually running this script affects car charging anywhere."
+      - stop: "Exiting script because car is not at home, otherwise the script will affect car if charging elsewhere."
 
   # Always set initial charge current here.  Otherwise if the charger is already on, it might not be set for sometime until there is a change.
   # The new charge current value will only be set if the old and new values are different. Confirmed in log.
@@ -637,7 +638,6 @@ actions:
   # If set daily car charge limit is toggled on and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.
   #
   # If charge car based on weather is enabled, daily car charge limit and weather provider settings must be configured.
-  # If set daily car charge limit is toggled on and if necessary, user can manually override the charge limit setting within 30 seconds after it has been set by this automation.
 
   - choose:
 
@@ -698,7 +698,7 @@ actions:
             todayCarChargeLimit: "{{ car_charge_limit_list[todayIndex] }}"
 
             # See https://www.home-assistant.io/integrations/weather/
-            # Some possible values: rainy, cloudy, partlycloudy
+            # Some possible values: rainy, cloudy, partlycloudy, clear-night
             finalCarChargeLimit: >
               {% if chargeCarBaseOnWeather
               and 'rainy' in periodForecastList
@@ -708,34 +708,18 @@ actions:
                 {{ todayCarChargeLimit }} 
               {% endif %}
 
-            tmpCarChargeLimit: >
-              {% if finalCarChargeLimit > car_charge_limit_min %}
-                {{ finalCarChargeLimit - 1 }}
-              {% else %}
-                {{ finalCarChargeLimit + 1 }} 
-              {% endif %}
-
         # Show current status
         - service: system_log.write
           data_template:
             message: |-
               {{now()}}: 
-              finalCarChargeLimit={{finalCarChargeLimit}}, tmpCarChargeLimit={{tmpCarChargeLimit}}, todayCarChargeLimit={{todayCarChargeLimit}}, carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}},
+              finalCarChargeLimit={{finalCarChargeLimit}}, todayCarChargeLimit={{todayCarChargeLimit}}, carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}},
               badWeatherPeriodMaxChargeLimit={{badWeatherPeriodMaxChargeLimit}}, badWeatherPeriodChargeLimitList={{badWeatherPeriodChargeLimitList}}, periodForecastList={{periodForecastList}},
               todayIndex={{todayIndex}}, car_charge_limit_list={{car_charge_limit_list}}, weather_today={{weather_today}}
             #level: warning
             level: info
 
-        # Changing charge limit can turn on or off charger by car depending on whether charge limit has been reached or not, so minimise difference between tmpCarChargeLimit and finalCarChargeLimit.
-        # Set charge limit to different value before changing it again later to give indication of change.
-        - service: number.set_value
-          data:
-            value: "{{ tmpCarChargeLimit }}"
-          target:
-            entity_id: !input car_number_charge_limit
-        - delay: "{{ wait_command_execute }}"
-
-        # User has 30 seconds to override finalCarChargeLimit in app once set.
+        # Changing charge limit can turn on or off charger by car depending on whether charge limit has been reached or not.
         - service: number.set_value
           data:
             value: "{{ finalCarChargeLimit }}"
