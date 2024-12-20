@@ -37,7 +37,7 @@ template:
 [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fflashg1%2FTeslaSolarCharger%2Fblob%2Fmain%2FTesla_solar_charger_automation.yaml)
 
 -	Import the Blueprint automatically by clicking above, or manually copy the Blueprint file to following location and reload HA config,
-\\HOMEASSISTANT\config\blueprints\automation\flashg\Tesla_solar_charger_automation.yaml
+\\HOMEASSISTANT\config\blueprints\automation\flashg1\Tesla_solar_charger_automation.yaml
 
 -	Create 3 helper booleans, eg.
 Settings > Devices & Services > Helpers > Create Helper > Toggle
