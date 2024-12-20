@@ -112,6 +112,10 @@ Daily car charge limit settings
 - If set daily car charge limit is toggled on and charge car based on weather is enabled, charge limit will be adjusted to the highest limit set within the rainy forecast period taking into account the car charge limit on bad weather setting.
 - If charge car based on weather is enabled, daily car charge limit and weather provider settings must be configured.
 
+Special note for 3-phase chargers
+---------------------------------
+Please see [discussion](https://github.com/flashg1/TeslaSolarCharger/issues/18) on voltage to set for charger with 3-phase power.
+
 
 GUI display examples
 ====================
