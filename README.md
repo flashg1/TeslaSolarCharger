@@ -34,14 +34,12 @@ template:
             {{ states('sensor.envoy_[YourEnvoyId]_current_power_consumption')|int - states('sensor.envoy_[YourEnvoyId]_current_power_production')|int }}
 ```
 
-- Import the Blueprint automatically by click here,
-
 [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fflashg1%2FTeslaSolarCharger%2Fblob%2Fmain%2FTesla_solar_charger_automation.yaml)
 
--	Or manually copy the Blueprint file to,
+-	Import the Blueprint automatically by clicking above, or manually copy the Blueprint file to,
 \\HOMEASSISTANT\config\blueprints\automation\flashg\Tesla_solar_charger_automation.yaml
 
--	Restart HA.
+-	Restart HA if required.
 
 -	Create 3 helper booleans, eg.
 Settings > Devices & Services > Helpers > Create Helper > Toggle
