@@ -34,7 +34,10 @@ template:
             {{ states('sensor.envoy_[YourEnvoyId]_current_power_consumption')|int - states('sensor.envoy_[YourEnvoyId]_current_power_production')|int }}
 ```
 
--	Copy the Blueprint file to,
+- Import the Blueprint automatically by click here,
+https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fflashg1%2FTeslaSolarCharger%2Fblob%2Fmain%2FTesla_solar_charger_automation.yaml
+
+-	Or manually copy the Blueprint file to,
 \\HOMEASSISTANT\config\blueprints\automation\flashg\Tesla_solar_charger_automation.yaml
 
 -	Restart HA.
