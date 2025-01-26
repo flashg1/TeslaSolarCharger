@@ -16,7 +16,7 @@ blueprint:
 
   name: Tesla solar charger automation
   description: >
-    Charge Tesla car using surplus solar electricity and weather forecast (v2.1c).
+    Charge Tesla car using surplus solar electricity and weather forecast (v2.1d).
     See https://github.com/flashg1/TeslaSolarCharger for details.
   domain: automation
 
@@ -1021,6 +1021,14 @@ actions:
   #  target:
   #    entity_id: scene.tesla_solar_charger_script_scene
   #- delay: "{{ wait_command_execute }}"
+
+  # Set current to 5A on exit because charger is turned off on reaching charge limit and had no chance to set current to 0.
+  - service: number.set_value
+    data:
+      value: "{{ initial_charge_current }}"
+    target:
+      entity_id: !input car_number_charging_amps
+  - delay: "{{ wait_command_execute }}"
 
   # Get the latest data from Tesla to update HA before exiting script.
   - service: button.press
