@@ -3,6 +3,7 @@ Tesla Solar Charger
 
 v2.1d   27/1/2025
 -   Set current to 5A on exit because charger is turned off on reaching charge limit and had no chance to set current to 0.
+-   Added note on how to possibly charge multiple Tesla cars at the same time based on power allocation weighting.
 
 v2.1c   16/12/2024
 -   Removed 30 seconds delay for overriding charge limit. To override charge limit, set charge limit from Tesla app and toggle off setting daily charge limit.

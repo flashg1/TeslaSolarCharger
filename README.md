@@ -69,6 +69,7 @@ Features
 -   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
 -   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
 -   Allow top up from grid if there is not enough solar electricity.  Need to toggle on charge from grid and set daytime/nighttime power offsets to draw power from grid.
+-   Support to charge multiple Tesla cars at the same time based on power allocation weighting.
 
 
 How to use
@@ -115,6 +116,28 @@ Daily car charge limit settings
 Special note for 3-phase chargers
 ---------------------------------
 Please see [discussion](https://github.com/flashg1/TeslaSolarCharger/issues/18) on voltage to set for charger with 3-phase power.
+
+Charge mutiple Tesla cars at the time based on power allocation weighting for each car
+--------------------------------------------------------------------------------------
+Note: This is theoretical only since I don't have 2 Tesla cars to test this, but happy for any feedback.
+
+- Create power allocation weighting for each car.  For example, to create for car1,
+```
+Settings > Devices & services > Helpers > Create helper > Number >
+Name: Car1 power allocation weight
+Minimum value: 1
+Maximum value: 10
+```
+- Create power allocation sensor for each car.  For example, to create power allocation sensor for car1 assuming we have car1 and car2,
+```
+Settings > Devices & services > Helpers > Create helper > Template > Template a sensor >
+Name: Car1 power allocation
+State template: {{ states('sensor.grid_power_net')|int * states('input_number.car1_power_allocation_weight')|int / (state_attr('automation.car1_solar_charger_automation', 'current') * states('input_number.car1_power_allocation_weight')|int + state_attr('automation.car2_solar_charger_automation', 'current') * states('input_number.car2_power_allocation_weight')|int) }}
+Unit of measurement: W
+Device class: Power
+State class: Measurement
+```
+- Use the power allocation sensors defined above as input to "Grid power net" in each car's Blueprint.
 
 
 GUI display examples
