@@ -69,7 +69,7 @@ Features
 -   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
 -   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
 -   Allow top up from grid if there is not enough solar electricity.  Need to toggle on charge from grid and set daytime/nighttime power offsets to draw power from grid.
--   Support to charge multiple Tesla cars at the same time based on power allocation weighting.
+-   Support charging multiple Tesla cars at the same time based on power allocation weighting for each car.
 
 
 How to use
