@@ -117,8 +117,8 @@ Special note for 3-phase chargers
 ---------------------------------
 Please see [discussion](https://github.com/flashg1/TeslaSolarCharger/issues/18) on voltage to set for charger with 3-phase power.
 
-Charge mutiple Tesla cars at the time based on power allocation weighting for each car
---------------------------------------------------------------------------------------
+Charge mutiple Tesla cars at the same time based on power allocation weighting for each car
+-------------------------------------------------------------------------------------------
 Note: This is theoretical only since I don't have 2 Tesla cars to test this, but happy for any feedback.  To ensure power is allocated according to weighting, the "Grid power net" update cycle should be the same as the script looping cycle, ie. 1 minute.
 
 - Create power allocation weighting for each car.  For example, to create for car1,
