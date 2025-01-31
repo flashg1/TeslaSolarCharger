@@ -13,6 +13,19 @@ Home Assistant Blueprint to charge Tesla car using surplus solar electricity and
 ![Screenshot_20230630-135925_Home Assistant](https://github.com/flashg1/TeslaSolarCharger/assets/122323972/2f04b1e2-b56d-493c-977f-82d5dd04cbe5)
 
 
+Features
+========
+
+-   Charge from excess solar adjusting Tesla car charging current according to feedback loop value "Grid Power Net".  The "Grid Power Net" sensor expresses negative power in Watts when exporting to grid, and positive power when consuming from grid.
+-   Support multi-day solar charging using sun elevation triggers to start and stop. (Sun elevation triggers should be more favourable for countries in the northern hemisphere.)
+-   Compatible with off-peak night time charging.
+-   Configurable daily car charge limit for 7 days.  Default is to use the Tesla app charge limit.
+-   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
+-   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
+-   Allow top up from grid if there is not enough solar electricity.  Need to toggle on charge from grid and set power offset to draw power from grid.
+-   Support charging multiple Tesla cars at the same time based on power allocation weighting for each car.
+
+
 Installation
 ============
 
@@ -45,7 +58,11 @@ Settings > Devices & Services > Helpers > Create Helper > Toggle
 2.	Telsa Model3 charge from grid
 3.	Tesla Model3 stop charging
 
--	Config the Blueprint automation specifying charger voltage, maximum current and helper booleans created above, ie.
+-	Create 1 helper number or template sensor for power offset (required when charging from grid), eg.
+Settings > Devices & Services > Helpers > Create Helper > Number or Template a sensor
+1.	Tesla Model3 power offset
+
+-	Config the Blueprint automation specifying charger voltage, maximum current and helper entities created above, ie.
 Settings > Automations & Scenes > Blueprints > Tesla solar charger automation
 
 
@@ -57,19 +74,6 @@ My setup
 -	Tesla Custom Integration v3.20.4, https://github.com/alandtse/tesla
 -	Tesla UMC charger, 230V, max 15A.
 -	Tesla Model 3.
-
-
-Features
-========
-
--   Charge from excess solar adjusting Tesla car charging current according to feedback loop value "Grid Power Net".  The "Grid Power Net" sensor expresses negative power in Watts when exporting to grid, and positive power when consuming from grid.
--   Support multi-day solar charging using sun elevation triggers to start and stop. (Sun elevation triggers should be more favourable for countries in the northern hemisphere.)
--   Compatible with off-peak night time charging.
--   Configurable daily car charge limit for 7 days.  Default is to use the Tesla app charge limit.
--   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
--   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
--   Allow top up from grid if there is not enough solar electricity.  Need to toggle on charge from grid and set daytime/nighttime power offsets to draw power from grid.
--   Support charging multiple Tesla cars at the same time based on power allocation weighting for each car.
 
 
 How to use
@@ -89,7 +93,7 @@ To charge from excess solar, just plug in the charger.  The initial charge curre
 
 Option 2
 --------
-To charge from grid and solar, toggle on charge from grid and set daytime/nighttime power offsets to draw power from grid.
+To charge from grid and solar, toggle on charge from grid and set power offset to draw power from grid.
 
 
 Notes

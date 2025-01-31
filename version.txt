@@ -2,6 +2,7 @@ Tesla Solar Charger
 ===================
 
 v2.1d   27/1/2025
+-   Breaking change: Need to define helper number or template sensor for power offset to charge from grid.
 -   Set current to 5A on exit because charger is turned off on reaching charge limit and had no chance to set current to 0.
 -   Added note on how to possibly charge multiple Tesla cars at the same time based on power allocation weighting.
 

@@ -130,41 +130,24 @@ blueprint:
     toggle_charge_from_grid:
       name: Charge from grid toggle
       description: >
-        Toggle on to charge from grid and solar using daytime or nighttime power offsets (Settings > Devices & Services > Helpers > Create helper > Toggle).
+        Toggle on to charge from grid and solar using power offset (Settings > Devices & Services > Helpers > Create helper > Toggle).
         Default is to charge from solar only.
       #default: input_boolean.telsa_model3_charge_from_grid
       selector:
         entity:
           domain: input_boolean
 
-    daytime_power_offset:
-      name: Daytime power offset
+    power_offset_from_zero:
+      name: Power offset for import from or export to grid
       description: >
-        Specify the power to draw from or export to grid during daytime.
-        Set negative value to draw from grid, or positive value to export to grid.
-        Need to toggle on charge from grid to use this power offset when the sun reaches sunrise elevation start trigger.
-      default: 0
+        Sensor to specify offset in Watts for power import from grid or export to grid (Settings > Devices & Services > Helpers > Create helper > Number or Template).
+        Set negative value to import from grid, or positive value to export to grid.
+        If charge from grid is toggled off, the script will try to achieve power offset of 0 watt, ie. neither import from nor export to grid.
+        Need to toggle on charge from grid to use this power offset.
+      #default: sensor.not_defined
       selector:
-        number:
-          min: -20000
-          max: +20000
-          unit_of_measurement: watt
-          mode: box
+        entity:
 
-    nighttime_power_offset:
-      name: Nighttime power offset
-      description: >
-        Specify the power to draw from or export to grid during nighttime.
-        Set negative value to draw from grid, or positive value to export to grid.
-        Need to toggle on charge from grid to use this power offset when the sun reaches sunset elevation end trigger.
-      default: 0
-      selector:
-        number:
-          min: -20000
-          max: +20000
-          unit_of_measurement: watt
-          mode: box
-      
     toggle_stop_charger:
       name: Stop charger toggle
       description: >
@@ -486,8 +469,7 @@ variables:
   sunrise_elevation_start_trigger: !input sunrise_elevation_start_trigger
   sunset_elevation_end_trigger: !input sunset_elevation_end_trigger
   charge_from_grid: !input toggle_charge_from_grid
-  daytime_power_offset: !input daytime_power_offset
-  nighttime_power_offset: !input nighttime_power_offset
+  power_offset_from_zero: !input power_offset_from_zero
   #stop_charger_button_press: !input stop_charger_button
   stop_charger: !input toggle_stop_charger
 
@@ -835,22 +817,31 @@ actions:
                 {{ skew_default }}
               {% endif %}
 
-            isDaytime: >
-              {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunrise_elevation_start_trigger)
-              or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunset_elevation_end_trigger) %}
-                {{ true }}
-              {% else %}
-                {{ false }}
-              {% endif %}
+            # Not used
+            #isDaytime: >
+            #  {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunrise_elevation_start_trigger)
+            #  or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunset_elevation_end_trigger) %}
+            #    {{ true }}
+            #  {% else %}
+            #    {{ false }}
+            #  {% endif %}
+
+            # -ve to use from grid, +ve to export to grid.
+            #powerOffset: >
+            #  {% if is_state(charge_from_grid, 'on') %}
+            #    {% if has_value(power_offset_from_zero) %}
+            #      {{ states(power_offset_from_zero) | int }}
+            #    {% else %}
+            #      {{ 0 }}
+            #    {% endif %}
+            #  {% else %}
+            #    {{ 0 }}
+            #  {% endif %}
 
             # -ve to use from grid, +ve to export to grid.
             powerOffset: >
               {% if is_state(charge_from_grid, 'on') %}
-                {% if isDaytime %}
-                  {{ daytime_power_offset }}
-                {% else %}
-                  {{ nighttime_power_offset }}
-                {% endif %}
+                {{ states(power_offset_from_zero) | int }}
               {% else %}
                 {{ 0 }}
               {% endif %}
