@@ -1,3 +1,7 @@
+# Support for TeslaSolarCharger is ending ...
+Please read [this](https://github.com/flashg1/TeslaSolarCharger/wiki/How-to-migrate-from-TeslaSolarCharger-to-evSolarCharger).
+
+
 # Tesla Solar Charger
 Home Assistant Blueprint to charge Tesla car using surplus solar electricity and weather forecast.
 
@@ -24,6 +28,16 @@ Features
 -   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
 -   Allow top up from grid if there is not enough solar electricity.  Need to toggle on charge from grid and set power offset to draw power from grid.
 -   Support charging multiple Tesla cars at the same time based on power allocation weighting for each car.
+
+
+My setup
+========
+
+-	Home Assistant, https://www.home-assistant.io/
+-	Enphase Envoy Integration configured for 30 seconds update interval, https://www.home-assistant.io/integrations/enphase_envoy
+-	Tesla Custom Integration v3.20.4, https://github.com/alandtse/tesla
+-	Tesla UMC charger, 230V, max 15A.
+-	Tesla Model 3.
 
 
 Installation
@@ -64,16 +78,6 @@ Settings > Devices & Services > Helpers > Create Helper > Number or Template a s
 
 -	Config the Blueprint automation specifying charger voltage, maximum current and helper entities created above, ie.
 Settings > Automations & Scenes > Blueprints > Tesla solar charger automation
-
-
-My setup
-========
-
--	Home Assistant, https://www.home-assistant.io/
--	Enphase Envoy Integration configured for 30 seconds update interval, https://www.home-assistant.io/integrations/enphase_envoy
--	Tesla Custom Integration v3.20.4, https://github.com/alandtse/tesla
--	Tesla UMC charger, 230V, max 15A.
--	Tesla Model 3.
 
 
 How to use
