@@ -1,5 +1,5 @@
 # Support for TeslaSolarCharger is ending ...
-Please use [evSolarCharger](https://github.com/flashg1/evSolarCharger) instead.  Please read [this](https://github.com/flashg1/TeslaSolarCharger/wiki/How-to-migrate-from-TeslaSolarCharger-to-evSolarCharger) if you need to migrate from TeslaSolarCharger.
+Please use [evSolarCharger](https://github.com/flashg1/evSolarCharger) instead.  Please read [this](https://github.com/flashg1/evSolarCharger/wiki/Installation#how-to-migrate-from-teslasolarcharger-to-evsolarcharger) if you need to migrate from TeslaSolarCharger.
 
 
 # Tesla Solar Charger
